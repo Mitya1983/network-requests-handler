@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <string>
 
-namespace tristan::network{
+namespace mt::network::http {
     /**
      * \enum HttpStatus
      * \brief Stores values for http error codes.

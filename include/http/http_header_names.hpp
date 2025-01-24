@@ -3,7 +3,7 @@
 
 #include <string>
 
-namespace tristan::network::http::header_names {
+namespace mt::network::http::header_names {
     
     [[maybe_unused]] inline const std::string a_im = "A-IM";
     [[maybe_unused]] inline const std::string accept = "accept";

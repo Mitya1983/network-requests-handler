@@ -1,9 +1,9 @@
 #ifndef HTTP_HEADER_HPP
 #define HTTP_HEADER_HPP
 
-#include "network_error.hpp"
+#include "include/network_error.hpp"
 
-#include "http/concepts.hpp"
+#include "include/http/concepts.hpp"
 
 #include <string>
 #include <vector>

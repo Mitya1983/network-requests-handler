@@ -7,7 +7,7 @@
 namespace mt::network {
 
     class ResponseBase {
-
+        friend class RequestBase;
     public:
         ResponseBase() = delete;
         ResponseBase(const ResponseBase& p_other) = delete;

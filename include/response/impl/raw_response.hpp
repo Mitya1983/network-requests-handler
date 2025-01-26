@@ -2,7 +2,7 @@
 #ifndef INCLUDE_RESPONSE_IMPL_RAW_RESPONSE_HPP
 #define INCLUDE_RESPONSE_IMPL_RAW_RESPONSE_HPP
 
-#include "response/impl/private/base_response.hpp"
+#include "include/response/impl/private/base_response.hpp"
 
 namespace mt::network {
     class RawResponse : public ResponseBase {

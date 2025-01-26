@@ -1,6 +1,9 @@
-#include "request/impl/private/base_request.hpp"
+#include "include/request/impl/private/base_request.hpp"
 
-#include "../include/network_error.hpp"
+#include "include/network_error.hpp"
+
+#include "sockets/include/inet_socket.hpp"
+#include "sockets/include/socket_error.hpp"
 
 namespace {
     std::atomic< uint64_t > g_id = 1;
@@ -35,15 +38,15 @@ auto mt::network::RequestBase::error() const noexcept -> bool { return bool{m_er
 
 auto mt::network::RequestBase::status() const noexcept -> Status { return m_status; }
 
-auto mt::network::RequestBase::isPaused() const noexcept -> bool { return m_paused; }
+auto mt::network::RequestBase::isPaused() const noexcept -> bool { return m_paused.load(std::memory_order_relaxed); }
 
-auto mt::network::RequestBase::isCanceled() const noexcept -> bool { return m_canceled; }
+auto mt::network::RequestBase::isCanceled() const noexcept -> bool { return m_canceled.load(std::memory_order_relaxed); }
 
 auto mt::network::RequestBase::priority() const noexcept -> Priority { return m_priority; }
 
-auto mt::network::RequestBase::bytesToRead() const noexcept -> uint64_t { return m_bytes_to_read; }
+auto mt::network::RequestBase::bytesToRead() const noexcept -> int64_t { return m_bytes_to_read; }
 
-auto mt::network::RequestBase::bytesRead() const noexcept -> uint64_t { return m_bytes_read; }
+auto mt::network::RequestBase::bytesRead() const noexcept -> int64_t { return m_bytes_read; }
 
 auto mt::network::RequestBase::response() const -> const Response& { return m_response; }
 
@@ -287,6 +290,25 @@ void mt::network::RequestBase::setStatus(const Status p_status) {
 void mt::network::RequestBase::setError(const std::error_code p_error_code) {
     m_error = p_error_code;
     setStatus(Status::Error);
+}
+
+auto mt::network::RequestBase::checkSocketOperationErrorAndTimeOut(const sockets::InetSocket& p_socket,
+                                                                   const std::chrono::time_point< std::chrono::system_clock, std::chrono::microseconds > p_time_point) -> bool {
+    if (const auto error = p_socket.error(); error && error.value() != static_cast< int >(sockets::Error::CONNECT_TRY_AGAIN)
+            && p_socket.error().value() != static_cast< int >(sockets::Error::CONNECT_IN_PROGRESS)
+            && p_socket.error().value() != static_cast< int >(sockets::Error::CONNECT_ALREADY_IN_PROCESS)
+            && p_socket.error().value() != static_cast< int >(sockets::Error::WRITE_TRY_AGAIN)
+            && p_socket.error().value() != static_cast< int >(sockets::Error::READ_TRY_AGAIN)
+            && p_socket.error().value() != static_cast< int >(sockets::Error::READ_DONE)) {
+        setError(p_socket.error());
+        return false;
+            }
+    const auto end = std::chrono::time_point_cast< std::chrono::microseconds >(std::chrono::system_clock::now());
+    if (std::chrono::duration_cast< std::chrono::seconds >(end - p_time_point) >= m_timeout) {
+        setError(sockets::makeError(sockets::Error::SOCKET_TIMED_OUT));
+        return false;
+    }
+    return true;
 }
 
 void mt::network::RequestBase::notifyWhenBytesReadChanged() {

@@ -1,7 +1,7 @@
-#include "url.hpp"
-#include "network_utility.hpp"
-#include "network_schemes.hpp"
-#include "network_error.hpp"
+#include "include/url.hpp"
+#include "include/network_utility.hpp"
+#include "include/network_schemes.hpp"
+#include "include/network_error.hpp"
 
 #if defined(__linux__)
   #include <netdb.h>

@@ -1,4 +1,5 @@
-#include "network_utility.hpp"
+#include "include/network_utility.hpp"
+
 #include <arpa/inet.h>
 
 #include <cmath>
@@ -130,12 +131,20 @@ auto mt::network::utility::decodeUrl(const std::string& p_string_to_encode) -> s
                                                  });
                 iter != percentage_encoding.end()) {
                 result += iter->first;
-                ++++iterator;
+                ++ ++iterator;
                 continue;
             }
             result += *iterator;
         }
         ++iterator;
+    }
+    return result;
+}
+
+auto mt::network::utility::string(const std::vector< std::byte >::const_iterator begin, const std::vector< std::byte >::const_iterator end) -> std::string {
+    std::string result;
+    while (begin != end) {
+        result += static_cast<char>(*begin);
     }
     return result;
 }

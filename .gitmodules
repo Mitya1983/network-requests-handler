@@ -1,0 +1,8 @@
+[submodule "sockets"]
+	path = sockets
+	url = git@github.com:Mitya1983/sockets.git
+	branch = develop
+[submodule "resumable-coroutine"]
+	path = resumable-coroutine
+	url = git@github.com:Mitya1983/resumable-coroutine.git
+	branch = develop

@@ -1,9 +1,7 @@
-#include "../include/http/http_status_codes.hpp"
+#include "include/http/http_status_codes.hpp"
 
 #include <unordered_map>
-
 namespace{
-
     inline const std::unordered_map<uint16_t, std::string> statusCodesDescription = { { 100, "100: Continue" },
                                                                                       { 101, "101: Switching Protocol" },
                                                                                       { 102, "102: Processing" },
@@ -69,6 +67,6 @@ namespace{
     };
 
 } // namespace
-auto tristan::network::getHttpStatusDetails(network::HttpStatus status) -> const std::string&{
+auto mt::network::http::getHttpStatusDetails(mt::network::http::Status status) -> const std::string&{
     return statusCodesDescription.at(static_cast<uint16_t>(status));
 }

@@ -1,6 +1,6 @@
 // Created by Mitia Tristan on 20.12.24.
-#include "ipv4.hpp"
-#include "network_error.hpp"
+#include "include/ipv4.hpp"
+#include "include/network_error.hpp"
 #include <regex>
 
 namespace {
@@ -19,13 +19,15 @@ mt::network::Ipv4::Ipv4(const std::string& p_ip) {
     for (int64_t index = 0, length = std::ssize(p_ip); index < length; ++index) {
         if (p_ip[index] == '.') {
             part.clear();
-            m_ip[partIndex] = std::byte{std::stoi(part)};
+            auto value = std::stoi(part);
+            m_ip[partIndex] = *reinterpret_cast<std::byte*>(&value);
             ++partIndex;
             continue;
         }
         part += p_ip[index];
     }
-    m_ip[partIndex] = std::byte{std::stoi(part)};
+    auto value = std::stoi(part);
+    m_ip[partIndex] = *reinterpret_cast<std::byte*>(&value);
 }
 
 mt::network::Ipv4::Ipv4(std::string&& p_ip) : Ipv4(p_ip) { }

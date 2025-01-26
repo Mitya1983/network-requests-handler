@@ -45,8 +45,15 @@ if (${PROJECT_IS_TOP_LEVEL})
     endif ()
 endif ()
 
+execute_process(COMMAND git submodule foreach git pull origin develop
+                WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+
+add_subdirectory(sockets)
+
 include_directories(
-        include/
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ${CMAKE_CURRENT_SOURCE_DIR}/resumable-coroutine
+        ${CMAKE_CURRENT_SOURCE_DIR}/sockets
 )
 
 file(GLOB INC_FILES CONFIGURE_DEPENDS
@@ -54,6 +61,7 @@ file(GLOB INC_FILES CONFIGURE_DEPENDS
         include/http/*.hpp
         include/request/*.hpp
         include/response/*.hpp
+        include/handler/*.hpp
 )
 file(GLOB PRIVATE_INC_FILES CONFIGURE_DEPENDS
         include/*.hpp
@@ -62,10 +70,17 @@ file(GLOB PRIVATE_INC_FILES CONFIGURE_DEPENDS
         include/request/impl/*.hpp
         include/response/impl/private/*hpp
         include/response/impl/*.hpp
+        include/handler/impl/*.hpp
 )
 file(GLOB SRC_FILES CONFIGURE_DEPENDS
         source/*.cpp
 )
+file(GLOB RES_CORO_INC_FILES CONFIGURE_DEPENDS
+     resumable-coroutine/include/*.hpp
+     )
+file(GLOB RES_CORO_SRC_FILES CONFIGURE_DEPENDS
+     resumable-coroutine/source/*.cpp
+     )
 
 set(LIB_VERSION 2.0.0)
 
@@ -124,8 +139,15 @@ target_sources(
         ${PROJECT_NAME}
         PRIVATE ${SRC_FILES}
         PRIVATE ${PRIVATE_INC_FILES}
+        PRIVATE ${RES_CORO_INC_FILES}
+        PRIVATE ${RES_CORO_SRC_FILES}
         PUBLIC ${INC_FILES}
 )
+
+target_link_libraries(${PROJECT_NAME}
+        sockets
+        ${SOCKETS_DEPENDENCY_LIBS}
+        )
 
 set_target_properties(
         ${PROJECT_NAME}

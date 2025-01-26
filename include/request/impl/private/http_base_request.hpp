@@ -3,13 +3,12 @@
 #ifndef INCLUDE_REQUEST_IMPL_PRIVATE_HTTP_BASE_REQUEST_HPP
 #define INCLUDE_REQUEST_IMPL_PRIVATE_HTTP_BASE_REQUEST_HPP
 
-#include "request/impl/private/base_request.hpp"
+#include "include/request/impl/private/base_request.hpp"
 
-#include "http/http_param.hpp"
-#include "http/http_header.hpp"
-
+#include "include/http/http_param.hpp"
+#include "include/http/http_header.hpp"
 namespace mt::network {
-    class HttpRequest : public RequestBase {
+    template < class Derived > class HttpRequest : public RequestBase {
     public:
         HttpRequest(const HttpRequest& p_other) = delete;
         HttpRequest(HttpRequest&& p_other) noexcept = delete;
@@ -17,12 +16,16 @@ namespace mt::network {
         HttpRequest& operator=(HttpRequest&& p_other) noexcept = delete;
         ~HttpRequest() = default;
 
-        void initResponse(std::vector< std::byte > headers_data);
+
+        void processRequest();
 
     protected:
+        explicit HttpRequest(Url p_url);
+
         void addHeader(http::Header header);
         void addParam(http::Parameter parameter);
-        explicit HttpRequest(Url p_url);
+
+        void prepareRequest() { static_cast< Derived* >(this)->prepareRequest(); }
 
         std::string m_request_name;
         http::HttpHeaders m_headers;

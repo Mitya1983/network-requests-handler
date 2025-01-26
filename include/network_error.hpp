@@ -56,7 +56,7 @@ namespace mt::network {
         explicit NetworkException(ErrorCode code);
         explicit NetworkException(UrlErrors code);
         explicit NetworkException(HttpErrors code);
-        auto what() const -> const char* override;
+        auto what() const noexcept -> const char* override;
     private:
         std::string m_error_description;
     };

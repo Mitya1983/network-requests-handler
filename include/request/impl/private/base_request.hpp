@@ -1,9 +1,9 @@
 #ifndef INCLUDE_REQUEST_IMPL_PRIVATE_REQUEST_BASE_HPP
 #define INCLUDE_REQUEST_IMPL_PRIVATE_REQUEST_BASE_HPP
 
-#include "response/responses.hpp"
+#include "include/response/responses.hpp"
 
-#include "url.hpp"
+#include "include/url.hpp"
 
 #include <filesystem>
 #include <vector>
@@ -11,6 +11,10 @@
 #include <atomic>
 #include <fstream>
 #include <chrono>
+
+namespace mt::sockets {
+    class InetSocket;
+}
 
 namespace mt::network {
 
@@ -56,9 +60,9 @@ namespace mt::network {
         [[nodiscard]] auto isPaused() const noexcept -> bool;
         [[nodiscard]] auto isCanceled() const noexcept -> bool;
         [[nodiscard]] auto priority() const noexcept -> Priority;
-        [[nodiscard]] auto bytesToRead() const noexcept -> uint64_t;
-        [[nodiscard]] auto bytesRead() const noexcept -> uint64_t;
-        template < class ResponseType > [[nodiscard]] auto response() -> std::shared_ptr<ResponseType>;
+        [[nodiscard]] auto bytesToRead() const noexcept -> int64_t;
+        [[nodiscard]] auto bytesRead() const noexcept -> int64_t;
+        template < class ResponseType > [[nodiscard]] auto response() -> std::shared_ptr< ResponseType >;
         [[nodiscard]] auto response() const -> const Response&;
 
         void signupForBytesReadChange(std::function< void(uint64_t) >&& p_callback);
@@ -148,6 +152,8 @@ namespace mt::network {
         void setStatus(Status p_status);
         void setError(std::error_code p_error_code);
 
+        [[nodiscard]] auto checkSocketOperationErrorAndTimeOut(const sockets::InetSocket& p_socket,
+                                                               std::chrono::time_point< std::chrono::system_clock, std::chrono::microseconds > p_time_point) -> bool;
         Url m_url;
         std::filesystem::path m_output_path;
         std::vector< std::byte > m_delimiter;
@@ -161,16 +167,20 @@ namespace mt::network {
 
         std::vector< std::byte > m_request_data;
 
-        std::error_code m_error;
-
         Response m_response{std::monostate()};
 
-        std::chrono::seconds m_timeout{30};
+        std::error_code m_error;
 
-        uint64_t m_bytes_to_read{0};
-        uint64_t m_bytes_read{0};
+        std::chrono::seconds m_timeout{30};
+        const std::chrono::milliseconds m_sleeping_interval{250};
+
+        int64_t m_bytes_to_read{0};
+        int64_t m_bytes_read{0};
         uint64_t m_id{0};
+
         std::unique_ptr< std::ofstream > m_output_file;
+
+        const uint16_t m_max_frame_size = std::numeric_limits< uint16_t >::max();
 
         Status m_status{Status::Waiting};
         Priority m_priority{Priority::Normal};
@@ -178,6 +188,7 @@ namespace mt::network {
         std::atomic_bool m_canceled{false};
         bool m_output_to_file{false};
         bool m_ssl{false};
+
     private:
         void notifyWhenBytesReadChanged();
         void notifyWhenStatusChanged();
@@ -188,11 +199,9 @@ namespace mt::network {
         void notifyWhenFailed();
     };
 
+    template < class ResponseType > auto RequestBase::response() -> std::shared_ptr< ResponseType > { return std::get< std::shared_ptr< ResponseType > >(m_response); }
 
-    template < class ResponseType > auto RequestBase::response() -> std::shared_ptr<ResponseType> { return std::get< std::shared_ptr<ResponseType> >(m_response); }
-
-    template < class Object >
-    void RequestBase::signupForBytesReadChange(std::weak_ptr< Object > p_object, void (Object::*p_callback)(uint64_t)) {
+    template < class Object > void RequestBase::signupForBytesReadChange(std::weak_ptr< Object > p_object, void (Object::*p_callback)(uint64_t)) {
         m_bytes_read_callbacks.emplace_back([this, p_object, p_callback]() -> void {
             if (auto object_ptr = p_object.lock(); object_ptr) {
                 std::invoke(p_callback, object_ptr, m_bytes_read);
@@ -214,8 +223,7 @@ namespace mt::network {
         });
     }
 
-    template < class Object >
-    void RequestBase::signupForBytesReadChange(std::weak_ptr< Object > p_object, void (Object::*p_callback)(uint64_t, uint64_t)) {
+    template < class Object > void RequestBase::signupForBytesReadChange(std::weak_ptr< Object > p_object, void (Object::*p_callback)(uint64_t, uint64_t)) {
         m_bytes_read_callbacks.emplace_back([this, p_object, p_callback]() -> void {
             if (auto object_ptr = p_object.lock(); object_ptr) {
                 std::invoke(p_callback, object_ptr, m_id, m_bytes_read);
@@ -223,9 +231,7 @@ namespace mt::network {
         });
     }
 
-    
-    template < class Object >
-    void RequestBase::signupForBytesReadChange(Object* p_object, void (Object::*p_callback)(uint64_t, uint64_t)) {
+    template < class Object > void RequestBase::signupForBytesReadChange(Object* p_object, void (Object::*p_callback)(uint64_t, uint64_t)) {
         m_bytes_read_callbacks.emplace_back([this, p_object, p_callback]() -> void {
             if (p_object != nullptr) {
                 std::invoke(p_callback, p_object, m_id, m_bytes_read);
@@ -233,9 +239,7 @@ namespace mt::network {
         });
     }
 
-    
-    template < class Object >
-    void RequestBase::signupForBytesReadChange(Object& p_object, void (Object::*p_callback)(uint64_t, uint64_t)) {
+    template < class Object > void RequestBase::signupForBytesReadChange(Object& p_object, void (Object::*p_callback)(uint64_t, uint64_t)) {
         m_bytes_read_callbacks.emplace_back([this, p_object, p_callback]() -> void {
             std::invoke(p_callback, p_object, m_id, m_bytes_read);
         });
@@ -285,8 +289,7 @@ namespace mt::network {
         });
     }
 
-    template < class Object >
-    void RequestBase::signupForFinished(std::weak_ptr< Object > p_object, void (Object::*p_callback)(Response)) {
+    template < class Object > void RequestBase::signupForFinished(std::weak_ptr< Object > p_object, void (Object::*p_callback)(Response)) {
         m_finished_callbacks.emplace_back([this, p_object, p_callback]() -> void {
             if (auto object_ptr = p_object.lock(); object_ptr) {
                 std::invoke(p_callback, object_ptr, m_response);
@@ -294,9 +297,7 @@ namespace mt::network {
         });
     }
 
-    
-    template < class Object >
-    void RequestBase::signupForFinished(Object* p_object, void (Object::*p_callback)(Response)) {
+    template < class Object > void RequestBase::signupForFinished(Object* p_object, void (Object::*p_callback)(Response)) {
         m_finished_callbacks.emplace_back([this, p_object, p_callback]() -> void {
             if (p_object != nullptr) {
                 std::invoke(p_callback, p_object, m_response);
@@ -304,16 +305,13 @@ namespace mt::network {
         });
     }
 
-    
-    template < class Object >
-    void RequestBase::signupForFinished(Object& p_object, void (Object::*p_callback)(Response)) {
+    template < class Object > void RequestBase::signupForFinished(Object& p_object, void (Object::*p_callback)(Response)) {
         m_finished_callbacks.emplace_back([this, p_object, p_callback]() -> void {
             std::invoke(p_callback, p_object, m_response);
         });
     }
 
-    template < class Object >
-    void RequestBase::signupForFinished(std::weak_ptr< Object > p_object, void (Object::*p_callback)(uint64_t, Response)) {
+    template < class Object > void RequestBase::signupForFinished(std::weak_ptr< Object > p_object, void (Object::*p_callback)(uint64_t, Response)) {
         m_finished_callbacks.emplace_back([this, p_object, p_callback]() -> void {
             if (auto object_ptr = p_object.lock(); object_ptr) {
                 std::invoke(p_callback, object_ptr, m_id, m_response);
@@ -321,9 +319,7 @@ namespace mt::network {
         });
     }
 
-    
-    template < class Object >
-    void RequestBase::signupForFinished(Object* p_object, void (Object::*p_callback)(uint64_t, Response)) {
+    template < class Object > void RequestBase::signupForFinished(Object* p_object, void (Object::*p_callback)(uint64_t, Response)) {
         m_finished_callbacks.emplace_back([this, p_object, p_callback]() -> void {
             if (p_object != nullptr) {
                 std::invoke(p_callback, p_object, m_id, m_response);
@@ -331,9 +327,7 @@ namespace mt::network {
         });
     }
 
-    
-    template < class Object >
-    void RequestBase::signupForFinished(Object& p_object, void (Object::*p_callback)(uint64_t, Response)) {
+    template < class Object > void RequestBase::signupForFinished(Object& p_object, void (Object::*p_callback)(uint64_t, Response)) {
         m_finished_callbacks.emplace_back([this, p_object, p_callback]() -> void {
             std::invoke(p_callback, p_object, m_id, m_response);
         });
@@ -361,8 +355,7 @@ namespace mt::network {
         });
     }
 
-    template < class Object >
-    void RequestBase::signupForStatusChange(std::weak_ptr< Object > p_object, void (Object::*p_callback)(uint64_t)) {
+    template < class Object > void RequestBase::signupForStatusChange(std::weak_ptr< Object > p_object, void (Object::*p_callback)(uint64_t)) {
         m_status_changed_callbacks.emplace_back([this, p_object, p_callback]() -> void {
             if (auto object_ptr = p_object.lock(); object_ptr) {
                 std::invoke(p_callback, object_ptr, m_id);
@@ -384,8 +377,7 @@ namespace mt::network {
         });
     }
 
-    template < class Object >
-    void RequestBase::signupForStatusChange(std::weak_ptr< Object > p_object, void (Object::*p_callback)(Status)) {
+    template < class Object > void RequestBase::signupForStatusChange(std::weak_ptr< Object > p_object, void (Object::*p_callback)(Status)) {
         m_status_changed_callbacks.emplace_back([this, p_object, p_callback]() -> void {
             if (auto object_ptr = p_object.lock(); object_ptr) {
                 std::invoke(p_callback, object_ptr, m_status);
@@ -407,8 +399,7 @@ namespace mt::network {
         });
     }
 
-    template < class Object >
-    void RequestBase::signupForStatusChange(std::weak_ptr< Object > p_object, void (Object::*p_callback)(uint64_t, Status)) {
+    template < class Object > void RequestBase::signupForStatusChange(std::weak_ptr< Object > p_object, void (Object::*p_callback)(uint64_t, Status)) {
         m_status_changed_callbacks.emplace_back([this, p_object, p_callback]() -> void {
             if (auto object_ptr = p_object.lock(); object_ptr) {
                 std::invoke(p_callback, object_ptr, m_id, m_status);
@@ -540,8 +531,7 @@ namespace mt::network {
         });
     }
 
-    template < class Object >
-    void RequestBase::signupForCancelled(std::weak_ptr< Object > p_object, void (Object::*p_callback)(uint64_t)) {
+    template < class Object > void RequestBase::signupForCancelled(std::weak_ptr< Object > p_object, void (Object::*p_callback)(uint64_t)) {
         m_canceled_callbacks.emplace_back([this, p_object, p_callback]() -> void {
             if (auto object_ptr = p_object.lock(); object_ptr) {
                 std::invoke(p_callback, object_ptr, m_id);
@@ -607,8 +597,7 @@ namespace mt::network {
         });
     }
 
-    template < class Object >
-    void RequestBase::signupForFailed(std::weak_ptr< Object > p_object, void (Object::*p_callback)(std::error_code)) {
+    template < class Object > void RequestBase::signupForFailed(std::weak_ptr< Object > p_object, void (Object::*p_callback)(std::error_code)) {
         m_failed_callbacks.emplace_back([this, p_object, p_callback]() -> void {
             if (auto object_ptr = p_object.lock(); object_ptr) {
                 std::invoke(p_callback, object_ptr, m_error);
@@ -630,8 +619,7 @@ namespace mt::network {
         });
     }
 
-    template < class Object >
-    void RequestBase::signupForFailed(std::weak_ptr< Object > p_object, void (Object::*p_callback)(uint64_t, std::error_code)) {
+    template < class Object > void RequestBase::signupForFailed(std::weak_ptr< Object > p_object, void (Object::*p_callback)(uint64_t, std::error_code)) {
         m_failed_callbacks.emplace_back([this, p_object, p_callback]() -> void {
             if (auto object_ptr = p_object.lock(); object_ptr) {
                 std::invoke(p_callback, object_ptr, m_id, m_error);
@@ -652,119 +640,6 @@ namespace mt::network {
             std::invoke(p_callback, p_object, m_id, m_error);
         });
     }
-
-    // void RequestBase::addResponseData(std::vector< std::byte > p_data) {
-    //     const auto data_size = p_data.size();
-    //     if (not m_output_to_file) {
-    //         if (std::holds_alternative< std::monostate >(m_response)) {
-    //             initResponse();
-    //             std::visit(
-    //                 [&p_data]< class ResponseType >(ResponseType&& response) -> void {
-    //                     response->m_response_data = std::make_shared< std::vector< std::byte > >(std::move(p_data));
-    //                 },
-    //                 m_response);
-    //         } else {
-    //             std::visit(
-    //                 [&p_data]< class ResponseType >(ResponseType&& response) -> void {
-    //                     if (not response->m_response_data) {
-    //                         response->m_response_data = std::make_shared< std::vector< std::byte > >(std::move(p_data));
-    //                     } else {
-    //                         std::ranges::copy(std::move(p_data), std::back_inserter(*response->m_response_data));
-    //                     }
-    //                 },
-    //                 m_response);
-    //         }
-    //     } else {
-    //         if (m_output_path.empty()) {
-    //             setError(makeError(ErrorCode::File_path_empty));
-    //             return;
-    //         }
-    //         if (not m_output_file) {
-    //             m_output_file = std::make_unique< std::ofstream >(m_output_path, std::ios::binary);
-    //         }
-    //         if (not m_output_file->is_open()) {
-    //             m_output_file->open(m_output_path, std::ios::ate | std::ios::binary | std::ios::app);
-    //             if (not m_output_file->is_open()) {
-    //                 setError(std::error_code(errno, std::system_category()));
-    //                 return;
-    //             }
-    //         }
-    //         m_output_file->write(reinterpret_cast< const char* >(p_data.data()), std::ssize(p_data));
-    //     }
-    //     m_bytes_read += data_size;
-    //     notifyWhenBytesReadChanged();
-    // }
-
-    // void RequestBase::setStatus(const Status p_status) {
-    //     switch (p_status) {
-    //         using enum Status;
-    //         case Waiting:
-    //         case Writing:
-    //         case Reading:
-    //         case Processed:
-    //             break;
-    //         case Paused: {
-    //             m_paused.store(true, std::memory_order_relaxed);
-    //             notifyWhenPaused();
-    //             if (m_output_file) {
-    //                 if (m_output_file->is_open()) {
-    //                     m_output_file->close();
-    //                 }
-    //                 m_output_file.reset();
-    //             }
-    //             break;
-    //         }
-    //         case Resumed: {
-    //             m_paused.store(false, std::memory_order_relaxed);
-    //             notifyWhenResumed();
-    //             break;
-    //         }
-    //         case Error: {
-    //             notifyWhenFailed();
-    //             if (m_output_file) {
-    //                 if (m_output_file->is_open()) {
-    //                     m_output_file->close();
-    //                 }
-    //                 m_output_file.reset();
-    //             }
-    //             if (std::filesystem::exists(m_output_path)) {
-    //                 std::filesystem::remove(m_output_path);
-    //             }
-    //             break;
-    //         }
-    //         case Canceled: {
-    //             m_canceled.store(true, std::memory_order_relaxed);
-    //             notifyWhenCanceled();
-    //             if (m_output_file) {
-    //                 if (m_output_file->is_open()) {
-    //                     m_output_file->close();
-    //                 }
-    //                 m_output_file.reset();
-    //             }
-    //             if (std::filesystem::exists(m_output_path)) {
-    //                 std::filesystem::remove(m_output_path);
-    //             }
-    //             break;
-    //         }
-    //         case Done: {
-    //             notifyWhenFinished();
-    //             if (m_output_file) {
-    //                 if (m_output_file->is_open()) {
-    //                     m_output_file->close();
-    //                 }
-    //                 m_output_file.reset();
-    //             }
-    //             break;
-    //         }
-    //     }
-    //     m_status = p_status;
-    //     notifyWhenStatusChanged();
-    // }
-    //
-    // void RequestBase::setError(const std::error_code p_error_code) {
-    //     m_error = p_error_code;
-    //     setStatus(Status::Error);
-    // }
 }  // namespace mt::network
 
 #endif  // INCLUDE_REQUEST_IMPL_PRIVATE_REQUEST_BASE_HPP

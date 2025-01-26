@@ -1,4 +1,4 @@
-#include "network_error.hpp"
+#include "include/network_error.hpp"
 
 #include <map>
 #include <string>
@@ -88,7 +88,7 @@ mt::network::NetworkException::NetworkException(const HttpErrors code) { m_error
 
 // mt::network::NetworkException::NetworkException(const ResponseError code) { m_error_description = g_response_code_descriptions.at(code); }
 
-const char* mt::network::NetworkException::what() const { return exception::what(); }
+const char* mt::network::NetworkException::what() const noexcept { return exception::what(); }
 
 auto mt::network::makeError(const ErrorCode p_error) -> std::error_code { return {static_cast< int32_t >(p_error), g_network_error_category}; }
 

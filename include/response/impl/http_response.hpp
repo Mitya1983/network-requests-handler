@@ -1,15 +1,14 @@
 #ifndef INCLUDE_RESPONSE_IMPL_HTTP_RESPONSE_HPP
 #define INCLUDE_RESPONSE_IMPL_HTTP_RESPONSE_HPP
 
-#include "response/impl/private/base_response.hpp"
+#include "include/response/impl/private/base_response.hpp"
 
-#include "http/http_header.hpp"
-#include "http/http_status_codes.hpp"
+#include "include/http/http_header.hpp"
+#include "include/http/http_status_codes.hpp"
 
 namespace mt::network {
 
     class HttpResponse final : public ResponseBase {
-        friend class HttpRequest;
     public:
         HttpResponse() = delete;
         explicit HttpResponse(uint64_t p_id, std::vector< std::byte > p_headers_data);
@@ -22,7 +21,7 @@ namespace mt::network {
 
         [[nodiscard]] auto error() const -> std::error_code;
 
-        [[nodiscard]] auto status() const -> http::HttpStatus;
+        [[nodiscard]] auto status() const -> http::Status;
 
         [[nodiscard]] auto headers() const -> const http::HttpHeaders&;
 
@@ -32,7 +31,7 @@ namespace mt::network {
 
         http::HttpHeaders m_response_headers;
 
-        http::HttpStatus m_status;
+        http::Status m_status;
     };
 
 }  // namespace mt::network

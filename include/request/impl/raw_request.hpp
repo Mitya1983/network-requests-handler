@@ -1,12 +1,12 @@
 #ifndef INCLUDE_REQUEST_IMPL_RAW_REQUEST_HPP
 #define INCLUDE_REQUEST_IMPL_RAW_REQUEST_HPP
 
-#include "request/impl/private/base_request.hpp"
+#include "include/request/impl/private/base_request.hpp"
+
 
 namespace mt::network {
 
     class RawRequest final : public RequestBase {
-
     public:
         explicit RawRequest(Url p_url);
 
@@ -19,9 +19,11 @@ namespace mt::network {
         ~RawRequest() = default;
 
         auto requestData() -> const std::vector< std::byte >&;
-        void initResponse();
+
+        void processRequest ();
     };
 
 }  // namespace mt::network
+
 
 #endif  // INCLUDE_REQUEST_IMPL_RAW_REQUEST_HPP

@@ -1,15 +1,15 @@
-#ifndef HTTP_STATUS_CODES_HPP
-#define HTTP_STATUS_CODES_HPP
+#ifndef INCLUDE_HTTP_HTTP_STATUS_CODES_HPP
+#define INCLUDE_HTTP_HTTP_STATUS_CODES_HPP
 
 #include <cstdint>
 #include <string>
 
 namespace mt::network::http {
     /**
-     * \enum HttpStatus
+     * \enum Status
      * \brief Stores values for http error codes.
      */
-    enum class HttpStatus : uint16_t{
+    enum class Status : uint16_t{
         ///The server has received the request headers and the client should proceed to send the request body.
         Continue = 100,
         ///The requester has asked the server to switch protocols and the server has agreed to do so.
@@ -136,6 +136,6 @@ namespace mt::network::http {
         Network_Authentication_Required = 511
     };
 
-    auto getHttpStatusDetails(HttpStatus status) -> const std::string&;
+    auto getHttpStatusDetails(http::Status status) -> const std::string&;
 } // namespace tristan::network
-#endif // HTTP_STATUS_CODES_HPP
+#endif // INCLUDE_HTTP_HTTP_STATUS_CODES_HPP

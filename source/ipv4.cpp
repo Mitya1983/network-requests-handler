@@ -33,7 +33,7 @@ mt::network::Ipv4::Ipv4(const std::string& p_ip) {
 mt::network::Ipv4::Ipv4(std::string&& p_ip) : Ipv4(p_ip) { }
 
 mt::network::Ipv4::Ipv4(const uint32_t p_ip, const std::endian p_endian) {
-    const auto ptr = reinterpret_cast<const std::byte*>(p_ip);
+    const auto ptr = reinterpret_cast<const std::byte*>(&p_ip);
     if (p_endian == std::endian::little) {
         m_ip[0] = ptr[3];
         m_ip[1] = ptr[2];

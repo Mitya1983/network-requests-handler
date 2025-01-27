@@ -7,6 +7,8 @@
 
 #include "include/http/http_param.hpp"
 #include "include/http/http_header.hpp"
+#include "include/http/http_header_names.hpp"
+
 namespace mt::network {
     template < class Derived > class HttpRequest : public RequestBase {
     public:
@@ -15,7 +17,6 @@ namespace mt::network {
         HttpRequest& operator=(const HttpRequest& p_other) = delete;
         HttpRequest& operator=(HttpRequest&& p_other) noexcept = delete;
         ~HttpRequest() = default;
-
 
         void processRequest();
 
@@ -33,5 +34,7 @@ namespace mt::network {
         bool m_request_composed;
     };
 }  // namespace mt::network
+
+#include "source/http_base_request.tpp"
 
 #endif  //INCLUDE_REQUEST_IMPL_PRIVATE_HTTP_BASE_REQUEST_HPP

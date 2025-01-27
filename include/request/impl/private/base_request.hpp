@@ -45,7 +45,7 @@ namespace mt::network {
         void* operator new(size_t) = delete;
         ~RequestBase() = default;
         void setPriority(Priority p_priority);
-        void setBytesToRead(uint64_t p_bytes);
+        void setBytesToRead(int64_t p_bytes);
         void setResponseDelimiter(std::vector< std::byte > p_delimiter);
         void outputToFile(std::filesystem::path p_path);
         void cancel();

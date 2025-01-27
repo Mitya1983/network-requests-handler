@@ -54,27 +54,27 @@ include_directories(
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}/resumable-coroutine
         ${CMAKE_CURRENT_SOURCE_DIR}/sockets
-)
+        )
 
 file(GLOB INC_FILES CONFIGURE_DEPENDS
-        include/*.hpp
-        include/http/*.hpp
-        include/request/*.hpp
-        include/response/*.hpp
-        include/handler/*.hpp
-)
+     include/*.hpp
+     include/http/*.hpp
+     include/request/*.hpp
+     include/response/*.hpp
+     include/handler/*.hpp
+     )
 file(GLOB PRIVATE_INC_FILES CONFIGURE_DEPENDS
-        include/*.hpp
-        include/http/*.hpp
-        include/request/impl/private/*hpp
-        include/request/impl/*.hpp
-        include/response/impl/private/*hpp
-        include/response/impl/*.hpp
-        include/handler/impl/*.hpp
-)
+     include/*.hpp
+     include/http/*.hpp
+     include/request/impl/private/*hpp
+     include/request/impl/*.hpp
+     include/response/impl/private/*hpp
+     include/response/impl/*.hpp
+     include/handler/impl/*.hpp
+     )
 file(GLOB SRC_FILES CONFIGURE_DEPENDS
-        source/*.cpp
-)
+     source/*.cpp
+     )
 file(GLOB RES_CORO_INC_FILES CONFIGURE_DEPENDS
      resumable-coroutine/include/*.hpp
      )
@@ -87,7 +87,7 @@ set(LIB_VERSION 2.0.0)
 if ("${CMAKE_INSTALL_PREFIX}" STREQUAL "")
     message(STATUS "${PROJECT_NAME}: CMAKE_INSTALL_PREFIX is not set. ${CMAKE_BINARY_DIR} directory will be used")
     set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/mt_libs")
-else()
+else ()
     set(CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}/mt_libs")
 endif ()
 
@@ -125,14 +125,14 @@ if (${ENABLE_ASAN} AND CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_BUILD_TY
     execute_process(
             COMMAND find ${PATH_TO_CLANG_DIRECTORY} -name libclang_rt.asan-x86_64.so
             OUTPUT_VARIABLE PATH_TO_CLANG_LIB_DIRECTORY
-    )
+            )
     string(STRIP ${PATH_TO_CLANG_LIB_DIRECTORY} PATH_TO_CLANG_LIB_DIRECTORY)
     target_link_directories(${PROJECT_NAME} PRIVATE
-            ${PATH_TO_CLANG_LIB_DIRECTORY}
-    )
+                            ${PATH_TO_CLANG_LIB_DIRECTORY}
+                            )
     target_link_libraries(${PROJECT_NAME} PRIVATE
-            -lclang_rt.asan-x86_64
-    )
+                          -lclang_rt.asan-x86_64
+                          )
 endif ()
 
 target_sources(
@@ -142,19 +142,25 @@ target_sources(
         PRIVATE ${RES_CORO_INC_FILES}
         PRIVATE ${RES_CORO_SRC_FILES}
         PUBLIC ${INC_FILES}
-)
+        )
 
 target_link_libraries(${PROJECT_NAME}
-        sockets
-        ${SOCKETS_DEPENDENCY_LIBS}
-        )
+                      sockets
+                      ${SOCKETS_DEPENDENCY_LIBS}
+                      )
+
+target_link_libraries(test
+                      sockets
+                      ${SOCKETS_DEPENDENCY_LIBS}
+                      ${PROJECT_NAME}
+                      )
 
 set_target_properties(
         ${PROJECT_NAME}
         PROPERTIES
         VERSION ${LIB_VERSION}
         OUTPUT_NAME ${PROJECT_NAME}
-)
+        )
 if (BUILD_DOCS)
     find_package(Doxygen REQUIRED doxygen)
     set(DOXYGEN_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/Docs)
@@ -165,6 +171,6 @@ if (BUILD_DOCS)
             doxygen
             ${PROJECT_SOURCE_DIR}/inc
             ALL
-    )
+            )
 endif ()
 

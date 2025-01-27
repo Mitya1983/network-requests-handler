@@ -11,7 +11,7 @@ namespace {
     struct Invoker {
         void operator()(std::monostate) { }
 
-        void operator()(std::shared_ptr< mt::network::RawRequest > p_request) {
+        void operator()(std::shared_ptr< mt::network::RawRequest > p_request) const {
             if (block) {
                 p_request->processRequest();
             } else {
@@ -19,7 +19,7 @@ namespace {
             }
         }
 
-        void operator()(std::shared_ptr< mt::network::GetRequest > p_request) {
+        void operator()(std::shared_ptr< mt::network::GetRequest > p_request) const {
             if (block) {
                 p_request->processRequest();
             } else {
@@ -27,7 +27,7 @@ namespace {
             }
         }
 
-        void operator()(std::shared_ptr< mt::network::PostRequest > p_request) {
+        void operator()(std::shared_ptr< mt::network::PostRequest > p_request) const {
             if (block) {
                 p_request->processRequest();
             } else {
@@ -35,7 +35,7 @@ namespace {
             }
         }
 
-        void operator()(std::shared_ptr< mt::network::PutRequest > p_request) {
+        void operator()(std::shared_ptr< mt::network::PutRequest > p_request) const {
             if (block) {
                 p_request->processRequest();
             } else {

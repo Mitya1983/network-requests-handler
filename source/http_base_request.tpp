@@ -1,5 +1,7 @@
 // Created by Mitia mt on 13.01.25.
-#include "include/request/impl/private/http_base_request.hpp"
+
+#ifndef SOURCE_HTTP_BASE_REQUEST_TPP
+#define SOURCE_HTTP_BASE_REQUEST_TPP
 
 #include "include/network_utility.hpp"
 #include "include/http/http_header_names.hpp"
@@ -126,7 +128,7 @@ template < class Derived > void ::mt::network::HttpRequest< Derived >::processRe
                     return;
                 }
                 if (not data.empty()) {
-                    bytes_read += data.size();
+                    bytes_read += std::ssize(data);
                     RequestBase::addResponseData(std::move(data));
                     if (m_error) {
                         return;
@@ -184,7 +186,7 @@ template < class Derived > void ::mt::network::HttpRequest< Derived >::processRe
                     return;
                 }
                 if (not data.empty()) {
-                    bytes_read += data.size();
+                    bytes_read += std::ssize(data);
                     RequestBase::addResponseData(std::move(data));
                     if (m_error) {
                         return;
@@ -220,7 +222,7 @@ mt::network::HttpRequest< Derived >::HttpRequest(Url p_url) :
         return;
     }
     m_headers.addHeader(http::Header(http::header_names::host, m_url.host()));
-    if (m_url.port_network_byte_order() == 443) {
+    if (m_url.port_local_byte_order() == 443) {
         m_ssl = true;
     }
 }
@@ -238,3 +240,4 @@ template < class Derived > void mt::network::HttpRequest< Derived >::addParam(ht
     }
     m_params.addParameter(std::move(parameter));
 }
+#endif  // SOURCE_HTTP_BASE_REQUEST_TPP

@@ -11,7 +11,7 @@ namespace {
 
 void mt::network::RequestBase::setPriority(const Priority p_priority) { m_priority = p_priority; }
 
-void mt::network::RequestBase::setBytesToRead(const uint64_t p_bytes) { m_bytes_to_read = p_bytes; }
+void mt::network::RequestBase::setBytesToRead(const int64_t p_bytes) { m_bytes_to_read = p_bytes; }
 
 void mt::network::RequestBase::setResponseDelimiter(std::vector< std::byte > p_delimiter) { m_delimiter = std::move(p_delimiter); }
 

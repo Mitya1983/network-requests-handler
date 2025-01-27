@@ -23,6 +23,7 @@ namespace mt::network::utility{
     [[nodiscard]] auto encodeUrl(const std::string& p_string_to_encode) -> std::string;
     [[nodiscard]] auto decodeUrl(const std::string& p_string_to_encode) -> std::string;
     [[nodiscard]] auto string(std::vector<std::byte>::const_iterator begin, std::vector<std::byte>::const_iterator end) -> std::string;
+    [[nodiscard]] auto capitalizeHttpHeader(const std::string& source) -> std::string;
 
     void copy(std::indirectly_readable auto begin, std::indirectly_readable auto end, std::vector<std::byte>& destination)
     requires std::is_same_v<std::decay_t<decltype(*begin)>, std::decay_t<decltype(*begin)>> and std::is_integral_v<std::decay_t<decltype(*begin)>>

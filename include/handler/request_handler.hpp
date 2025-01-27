@@ -6,7 +6,7 @@
 #include "include/request/requests.hpp"
 
 namespace mt::network {
-    void handle_request(Request, bool queued = true, bool block = false);
+    void handle_request(Request p_request, bool p_queued = true, bool p_block = false);
 }
 
 #endif //INCLUDE_HANDLER_REQUEST_HANDLER_HPP

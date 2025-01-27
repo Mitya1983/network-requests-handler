@@ -1,12 +1,14 @@
 #include "include/http/http_header.hpp"
 
+#include "include/network_utility.hpp"
+
 #include <algorithm>
 
 void mt::network::http::HttpHeaders::addHeader(Header p_header) { m_headers.emplace_back(std::move(p_header)); }
 
 auto mt::network::http::HttpHeaders::headerValue(const std::string& p_header_name) const -> std::optional< std::string > {
     const auto found = std::ranges::find_if(m_headers, [p_header_name](const Header& header) -> bool {
-        return header.name == p_header_name;
+        return header.name == p_header_name || header.name == mt::network::utility::capitalizeHttpHeader(p_header_name);
     });
     if (found == m_headers.cend()) {
         return std::nullopt;

@@ -6,6 +6,7 @@
 namespace mt::network {
 
     class GetRequest final : public HttpRequest<GetRequest> {
+        friend class HttpRequest<GetRequest>;
     public:
         explicit GetRequest(Url url);
         GetRequest(const GetRequest& p_other) = delete;
@@ -20,6 +21,7 @@ namespace mt::network {
     };
 
     class PostRequest : public HttpRequest<PostRequest> {
+        friend class HttpRequest<PostRequest>;
     public:
         explicit PostRequest(Url url);
         PostRequest(const PostRequest& p_other) = delete;
@@ -39,6 +41,7 @@ namespace mt::network {
     };
 
     class PutRequest final : public HttpRequest<PutRequest> {
+        friend class HttpRequest<PutRequest>;
     public:
         explicit PutRequest(Url url);
         PutRequest(const PutRequest& p_other) = delete;

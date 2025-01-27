@@ -141,10 +141,28 @@ auto mt::network::utility::decodeUrl(const std::string& p_string_to_encode) -> s
     return result;
 }
 
-auto mt::network::utility::string(const std::vector< std::byte >::const_iterator begin, const std::vector< std::byte >::const_iterator end) -> std::string {
+auto mt::network::utility::string(std::vector< std::byte >::const_iterator begin, const std::vector< std::byte >::const_iterator end) -> std::string {
     std::string result;
     while (begin != end) {
-        result += static_cast<char>(*begin);
+        result += static_cast< char >(*begin);
+        ++begin;
+    }
+    return result;
+}
+
+auto mt::network::utility::capitalizeHttpHeader(const std::string& source) -> std::string {
+    std::string result;
+    bool capitalize{true};
+    for (const auto ch : source) {
+        if (capitalize) {
+            result += static_cast<char>(std::toupper(ch));
+            capitalize = false;
+            continue;
+        }
+        if (ch == '-') {
+            capitalize = true;
+        }
+        result += ch;
     }
     return result;
 }

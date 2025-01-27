@@ -40,6 +40,9 @@ namespace {
 
 mt::network::Url::Url(const std::string& p_url) {
     bool scheme_parsed{false};
+    if (p_url.find("://") == std::string::npos) {
+        scheme_parsed = true;
+    }
     bool user_name_parsed{true};
     bool user_password_parsed{true};
     if (p_url.find('@') != std::string::npos) {
@@ -51,12 +54,13 @@ mt::network::Url::Url(const std::string& p_url) {
     bool query_parsed{false};
     for (int64_t index = 0, length = std::ssize(p_url); index < length; ++index) {
         if (not scheme_parsed) {
-            if (p_url[index] == '/') {
+            if (p_url[index] == ':') {
                 scheme_parsed = true;
-                ++index;
+                ++++index;
                 continue;
             }
             m_scheme += p_url[index];
+            continue;
         }
         if (not user_name_parsed) {
             if (p_url[index] == ':') {
@@ -87,6 +91,7 @@ mt::network::Url::Url(const std::string& p_url) {
                 continue;
             }
             m_host += p_url[index];
+            continue;
         }
         if (not port_parsed) {
             if (p_url[index] == '/') {
@@ -94,6 +99,7 @@ mt::network::Url::Url(const std::string& p_url) {
                 continue;
             }
             m_port += p_url[index];
+            continue;
         }
         if (not path_parsed) {
             if (p_url[index] == '?') {
@@ -101,6 +107,7 @@ mt::network::Url::Url(const std::string& p_url) {
                 continue;
             }
             m_path += p_url[index];
+            continue;
         }
         if (not query_parsed) {
             if (p_url[index] == '#') {
@@ -108,9 +115,16 @@ mt::network::Url::Url(const std::string& p_url) {
                 continue;
             }
             m_query += p_url[index];
+            continue;
         }
         //If we reach this point only fragment left
         m_fragment += p_url[index];
+    }
+    if (m_path.empty()) {
+        m_path = "/";
+    }
+    if (const auto port = schemes::getNetworkSchemeDefaultPort(m_scheme); port != 0) {
+        setPort(port, std::endian::native);
     }
     m_valid = true;
 }
@@ -163,12 +177,12 @@ void mt::network::Url::setAuthority(std::string p_host, std::string p_user_name,
 
 void mt::network::Url::addHostIP(std::string p_ip) { m_host_ip.emplace_back(std::move(p_ip)); }
 
-void mt::network::Url::setPort(const uint16_t p_port, const std::endian p_endian) {
+void mt::network::Url::setPort(uint16_t p_port, const std::endian p_endian) {
     if (p_endian == std::endian::big) {
         m_port = p_port;
         return;
     }
-    const auto ptr = reinterpret_cast<std::byte*>(p_port);
+    auto ptr = reinterpret_cast<std::byte*>(&p_port);
     std::swap(ptr[0], ptr[1]);
     m_port = *reinterpret_cast<uint16_t*>(ptr);
 }
@@ -239,7 +253,8 @@ auto mt::network::Url::port_local_byte_order() const noexcept -> uint16_t {
     if constexpr (std::endian::native == std::endian::big) {
         return m_port;
     }
-    const auto ptr = reinterpret_cast< std::byte* >(m_port);
+    auto port = m_port;
+    const auto ptr = reinterpret_cast< std::byte* >(&port);
     std::swap(ptr[0], ptr[1]);
     return *reinterpret_cast< uint16_t* >(ptr);
 }

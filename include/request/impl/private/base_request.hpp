@@ -13,7 +13,7 @@
 #include <chrono>
 
 namespace mt::sockets {
-    class InetSocket;
+    class TcpSocket;
 }
 
 namespace mt::network {
@@ -152,7 +152,7 @@ namespace mt::network {
         void setStatus(Status p_status);
         void setError(std::error_code p_error_code);
 
-        [[nodiscard]] auto checkSocketOperationErrorAndTimeOut(const sockets::InetSocket& p_socket,
+        [[nodiscard]] auto checkSocketOperationErrorAndTimeOut(const sockets::TcpSocket& p_socket,
                                                                std::chrono::time_point< std::chrono::system_clock, std::chrono::microseconds > p_time_point) -> bool;
         Url m_url;
         std::filesystem::path m_output_path;

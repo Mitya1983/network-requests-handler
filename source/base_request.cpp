@@ -295,7 +295,7 @@ void mt::network::RequestBase::setError(const std::error_code p_error_code) {
     setStatus(Status::Error);
 }
 
-auto mt::network::RequestBase::checkSocketOperationErrorAndTimeOut(const sockets::InetSocket& p_socket,
+auto mt::network::RequestBase::checkSocketOperationErrorAndTimeOut(const sockets::TcpSocket& p_socket,
                                                                    const std::chrono::time_point< std::chrono::system_clock, std::chrono::microseconds > p_time_point) -> bool {
     if (const auto error = p_socket.error(); error && error.value() != static_cast< int >(sockets::Error::CONNECT_TRY_AGAIN)
             && p_socket.error().value() != static_cast< int >(sockets::Error::CONNECT_IN_PROGRESS)

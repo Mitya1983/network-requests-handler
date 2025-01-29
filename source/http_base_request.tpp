@@ -11,7 +11,7 @@
 
 #include <thread>
 template < class Derived > void ::mt::network::HttpRequest< Derived >::processRequest() {
-    sockets::InetSocket socket;
+    sockets::TcpSocket socket;
 
     if (socket.error()) {
         RequestBase::setError(socket.error());

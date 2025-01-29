@@ -7,6 +7,8 @@
   #include <netdb.h>
 #endif
 
+#include "include/inet_socket.hpp"
+
 #include <unordered_map>
 #include <regex>
 #include <cstring>
@@ -308,6 +310,48 @@ auto mt::network::Url::valid() const noexcept -> bool { return m_valid; }
 
 auto mt::network::Url::resolved() const noexcept -> bool { return m_resolved; }
 
+struct DNSHeader {
+    uint16_t id; // Identification
+    uint16_t flags; // Flags
+    uint16_t qdcount; // Number of questions
+    uint16_t ancount; // Number of answers
+    uint16_t nscount; // Number of authority records
+    uint16_t arcount; // Number of additional records
+};
+
+struct Question {
+    uint16_t qtype;
+    uint16_t qclass;
+};
+
+void build_dns_query(const std::string& hostname, uint8_t* buffer, size_t& query_size) {
+    auto* dns_header = reinterpret_cast<DNSHeader*>(buffer);
+    dns_header->id = htons(0x1234); // Random ID
+    dns_header->flags = htons(0x0100); // Standard query
+    dns_header->qdcount = htons(1); // One question
+    dns_header->ancount = 0;
+    dns_header->nscount = 0;
+    dns_header->arcount = 0;
+
+    uint8_t* qname = buffer + sizeof(DNSHeader);
+    const char* hostname_cstr = hostname.c_str();
+    while (*hostname_cstr) {
+        const char* dot = strchr(hostname_cstr, '.');
+        if (!dot) dot = hostname_cstr + strlen(hostname_cstr);
+        *qname++ = dot - hostname_cstr;
+        memcpy(qname, hostname_cstr, dot - hostname_cstr);
+        qname += dot - hostname_cstr;
+        hostname_cstr = (*dot) ? dot + 1 : dot;
+    }
+    *qname++ = 0; // End of hostname
+
+    auto* question = reinterpret_cast<Question*>(qname);
+    question->qtype = htons(1); // Type A
+    question->qclass = htons(1); // Class IN
+
+    query_size = qname + sizeof(Question) - buffer;
+}
+
 void mt::network::Url::resolve() {
     auto host = m_host;
     if (host.find("www.") == 0) {
@@ -345,6 +389,8 @@ void mt::network::Url::resolve() {
         ++index;
     }
 
+    mt::sockets::TcpSocket socket(sockets::SocketType::DATA);
+
     // #include <iostream>
     // #include <cstring>
     // #include <sys/socket.h>
@@ -370,33 +416,7 @@ void mt::network::Url::resolve() {
     // };
     // #pragma pack(pop)
     //
-    // void build_dns_query(const std::string& hostname, uint8_t* buffer, size_t& query_size) {
-    //     DNSHeader* dns_header = reinterpret_cast<DNSHeader*>(buffer);
-    //     dns_header->id = htons(0x1234); // Random ID
-    //     dns_header->flags = htons(0x0100); // Standard query
-    //     dns_header->qdcount = htons(1); // One question
-    //     dns_header->ancount = 0;
-    //     dns_header->nscount = 0;
-    //     dns_header->arcount = 0;
-    //
-    //     uint8_t* qname = buffer + sizeof(DNSHeader);
-    //     const char* hostname_cstr = hostname.c_str();
-    //     while (*hostname_cstr) {
-    //         const char* dot = strchr(hostname_cstr, '.');
-    //         if (!dot) dot = hostname_cstr + strlen(hostname_cstr);
-    //         *qname++ = dot - hostname_cstr;
-    //         memcpy(qname, hostname_cstr, dot - hostname_cstr);
-    //         qname += dot - hostname_cstr;
-    //         hostname_cstr = (*dot) ? dot + 1 : dot;
-    //     }
-    //     *qname++ = 0; // End of hostname
-    //
-    //     Question* question = reinterpret_cast<Question*>(qname);
-    //     question->qtype = htons(1); // Type A
-    //     question->qclass = htons(1); // Class IN
-    //
-    //     query_size = qname + sizeof(Question) - buffer;
-    // }
+
     //
     // int main() {
     //     int sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);

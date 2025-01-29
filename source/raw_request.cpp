@@ -11,7 +11,7 @@ auto mt::network::RawRequest::requestData() -> const std::vector< std::byte >& {
 
 void mt::network::RawRequest::processRequest() {
 
-    sockets::InetSocket socket;
+    sockets::TcpSocket socket;
 
     if (const auto error = socket.error(); error) {
         RequestBase::setError(error);

@@ -56,7 +56,7 @@ mt::network::Url::Url(const std::string& p_url) {
         if (not scheme_parsed) {
             if (p_url[index] == ':') {
                 scheme_parsed = true;
-                ++++index;
+                ++ ++index;
                 continue;
             }
             m_scheme += p_url[index];
@@ -84,6 +84,7 @@ mt::network::Url::Url(const std::string& p_url) {
         if (not host_parsed) {
             if (p_url[index] == ':') {
                 port_parsed = false;
+                host_parsed = true;
                 continue;
             }
             if (p_url[index] == '/') {
@@ -182,14 +183,12 @@ void mt::network::Url::setPort(uint16_t p_port, const std::endian p_endian) {
         m_port = p_port;
         return;
     }
-    auto ptr = reinterpret_cast<std::byte*>(&p_port);
+    auto ptr = reinterpret_cast< std::byte* >(&p_port);
     std::swap(ptr[0], ptr[1]);
-    m_port = *reinterpret_cast<uint16_t*>(ptr);
+    m_port = *reinterpret_cast< uint16_t* >(ptr);
 }
 
-void mt::network::Url::setPort(const std::string& p_port) {
-    m_port = std::stoi(p_port);
-}
+void mt::network::Url::setPort(const std::string& p_port) { m_port = std::stoi(p_port); }
 
 void mt::network::Url::setPath(std::string p_path) {
     m_path = std::move(p_path);
@@ -305,10 +304,16 @@ auto mt::network::Url::composeUrl() const -> std::string {
     return uri;
 }
 
-auto mt::network::Url::isValid() const noexcept -> bool { return m_valid; }
+auto mt::network::Url::valid() const noexcept -> bool { return m_valid; }
+
+auto mt::network::Url::resolved() const noexcept -> bool { return m_resolved; }
 
 void mt::network::Url::resolve() {
-    const auto resolver_results = gethostbyname(m_host.c_str());
+    auto host = m_host;
+    if (host.find("www.") == 0) {
+        host.erase(0, 4);
+    }
+    const auto resolver_results = gethostbyname(host.c_str());
     if (resolver_results == nullptr) {
         switch (h_errno) {
             case HOST_NOT_FOUND: {
@@ -339,4 +344,97 @@ void mt::network::Url::resolve() {
         m_host_ip.emplace_back(ip);
         ++index;
     }
+
+    // #include <iostream>
+    // #include <cstring>
+    // #include <sys/socket.h>
+    // #include <arpa/inet.h>
+    // #include <unistd.h>
+    //
+    // #define DNS_PORT 53
+    // #define DNS_SERVER "8.8.8.8" // Google's public DNS server
+    //
+    // #pragma pack(push, 1)
+    // struct DNSHeader {
+    //     uint16_t id; // Identification
+    //     uint16_t flags; // Flags
+    //     uint16_t qdcount; // Number of questions
+    //     uint16_t ancount; // Number of answers
+    //     uint16_t nscount; // Number of authority records
+    //     uint16_t arcount; // Number of additional records
+    // };
+    //
+    // struct Question {
+    //     uint16_t qtype;
+    //     uint16_t qclass;
+    // };
+    // #pragma pack(pop)
+    //
+    // void build_dns_query(const std::string& hostname, uint8_t* buffer, size_t& query_size) {
+    //     DNSHeader* dns_header = reinterpret_cast<DNSHeader*>(buffer);
+    //     dns_header->id = htons(0x1234); // Random ID
+    //     dns_header->flags = htons(0x0100); // Standard query
+    //     dns_header->qdcount = htons(1); // One question
+    //     dns_header->ancount = 0;
+    //     dns_header->nscount = 0;
+    //     dns_header->arcount = 0;
+    //
+    //     uint8_t* qname = buffer + sizeof(DNSHeader);
+    //     const char* hostname_cstr = hostname.c_str();
+    //     while (*hostname_cstr) {
+    //         const char* dot = strchr(hostname_cstr, '.');
+    //         if (!dot) dot = hostname_cstr + strlen(hostname_cstr);
+    //         *qname++ = dot - hostname_cstr;
+    //         memcpy(qname, hostname_cstr, dot - hostname_cstr);
+    //         qname += dot - hostname_cstr;
+    //         hostname_cstr = (*dot) ? dot + 1 : dot;
+    //     }
+    //     *qname++ = 0; // End of hostname
+    //
+    //     Question* question = reinterpret_cast<Question*>(qname);
+    //     question->qtype = htons(1); // Type A
+    //     question->qclass = htons(1); // Class IN
+    //
+    //     query_size = qname + sizeof(Question) - buffer;
+    // }
+    //
+    // int main() {
+    //     int sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    //     if (sock < 0) {
+    //         perror("socket");
+    //         return 1;
+    //     }
+    //
+    //     struct sockaddr_in dest;
+    //     dest.sin_family = AF_INET;
+    //     dest.sin_port = htons(DNS_PORT);
+    //     inet_pton(AF_INET, DNS_SERVER, &dest.sin_addr);
+    //
+    //     uint8_t buffer[512];
+    //     size_t query_size;
+    //     build_dns_query("example.com", buffer, query_size);
+    //
+    //     if (sendto(sock, buffer, query_size, 0, (struct sockaddr*)&dest, sizeof(dest)) < 0) {
+    //         perror("sendto");
+    //         close(sock);
+    //         return 1;
+    //     }
+    //
+    //     socklen_t len = sizeof(dest);
+    //     ssize_t response_size = recvfrom(sock, buffer, sizeof(buffer), 0, (struct sockaddr*)&dest, &len);
+    //     if (response_size < 0) {
+    //         perror("recvfrom");
+    //         close(sock);
+    //         return 1;
+    //     }
+    //
+    //     std::cout << "Received DNS response of size " << response_size << " bytes" << std::endl;
+    //
+    //     close(sock);
+    //     return 0;
+    // }
+
+    // https://cabulous.medium.com/dns-message-how-to-read-query-and-response-message-cfebcb4fe817
+
+    // https://linux.die.net/man/3/res_query
 }

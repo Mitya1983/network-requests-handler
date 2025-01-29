@@ -20,11 +20,11 @@ namespace mt::network {
 
         void processRequest();
 
+        void addHeader(http::Header header);
+        void addParam(http::Parameter parameter);
     protected:
         explicit HttpRequest(Url p_url);
 
-        void addHeader(http::Header header);
-        void addParam(http::Parameter parameter);
 
         void prepareRequest() { static_cast< Derived* >(this)->prepareRequest(); }
 

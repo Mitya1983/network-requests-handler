@@ -35,9 +35,11 @@ namespace mt::network::http {
                     ch = char{*begin};
                 }
                 if (ch == ':') {
-                    name_parsed = true;
-                    ++begin;
-                    continue;
+                    if (not name_parsed) {
+                        name_parsed = true;
+                        ++begin;
+                        continue;
+                    }
                 }
                 if (ch == '\r') {
                     carriage_return = true;

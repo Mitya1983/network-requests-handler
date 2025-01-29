@@ -19,7 +19,7 @@ void mt::network::GetRequest::prepareRequest() {
             m_request_data.push_back(static_cast< std::byte >('/'));
         }
         utility::copy(m_url.path().begin(), m_url.path().end(), m_request_data);
-        if (!m_params.empty()) {
+        if (not m_params.empty()) {
             m_request_data.push_back(static_cast< std::byte >('?'));
             int32_t param_count = 0;
             for (const auto& param: m_params) {
@@ -35,7 +35,11 @@ void mt::network::GetRequest::prepareRequest() {
             }
         }
         if (!m_url.query().empty()) {
-            m_request_data.push_back(static_cast< std::byte >('&'));
+            if (not m_params.empty()) {
+                m_request_data.push_back(static_cast< std::byte >('&'));
+            } else {
+                m_request_data.push_back(static_cast< std::byte >('?'));
+            }
             utility::copy(m_url.query().begin(), m_url.query().end(), m_request_data);
         }
         std::string to_insert = " HTTP/1.1\r\n";

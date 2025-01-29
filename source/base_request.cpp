@@ -187,6 +187,9 @@ void mt::network::RequestBase::signupForFailed(std::function< void(uint64_t, std
 mt::network::RequestBase::RequestBase(Url p_url) :
     m_url(std::move(p_url)) {
     m_id = g_id.fetch_add(1);
+    if (not m_url.resolved()) {
+        m_url.resolve();
+    }
 }
 
 void mt::network::RequestBase::addResponseData(std::vector< std::byte > p_data) {

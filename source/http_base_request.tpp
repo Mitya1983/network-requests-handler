@@ -10,7 +10,6 @@
 #include "sockets/include/socket_error.hpp"
 
 #include <thread>
-
 template < class Derived > void ::mt::network::HttpRequest< Derived >::processRequest() {
     sockets::InetSocket socket;
 
@@ -25,6 +24,7 @@ template < class Derived > void ::mt::network::HttpRequest< Derived >::processRe
     socket.setPort(m_url.port_network_byte_order());
     socket.setNonBlocking();
     auto start = std::chrono::time_point_cast< std::chrono::microseconds >(std::chrono::system_clock::now());
+    int8_t ip_index{1};
     while (not socket.connected()) {
         if (m_paused.load(std::memory_order_relaxed)) {
             return;
@@ -35,7 +35,12 @@ template < class Derived > void ::mt::network::HttpRequest< Derived >::processRe
         socket.connect(m_ssl);
 
         if (not RequestBase::checkSocketOperationErrorAndTimeOut(socket, start)) {
-            return;
+            if (const auto& ips = m_url.hostIPList(); ip_index < std::ssize(ips)) {
+                socket.setHost(uint32_t{ips[ip_index]});
+                ++ip_index;
+            } else {
+                return;
+            }
         }
         if (socket.error()) {
             socket.resetError();
@@ -43,6 +48,7 @@ template < class Derived > void ::mt::network::HttpRequest< Derived >::processRe
         }
     }
     prepareRequest();
+    auto debug = utility::string(m_request_data.begin(), m_request_data.end());
     int64_t bytes_written = 0;
     const int64_t bytes_to_write = std::ssize(m_request_data);
     RequestBase::setStatus(Status::Writing);
@@ -217,7 +223,7 @@ template < class Derived >
 mt::network::HttpRequest< Derived >::HttpRequest(Url p_url) :
     RequestBase(std::move(p_url)),
     m_request_composed(false) {
-    if (not m_url.isValid() || (m_url.scheme() != "http" && m_url.scheme() != "https" && m_url.port() != "80" && m_url.port() != "443")) {
+    if (not m_url.valid() || (m_url.scheme() != "http" && m_url.scheme() != "https" && m_url.port() != "80" && m_url.port() != "443")) {
         setError(makeError(ErrorCode::Invalid_url));
         return;
     }

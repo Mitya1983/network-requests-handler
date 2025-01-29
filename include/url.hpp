@@ -40,7 +40,8 @@ namespace mt::network {
         [[nodiscard]] auto query() const noexcept -> const std::string&;
         [[nodiscard]] auto fragment() const noexcept -> const std::string&;
         [[nodiscard]] auto composeUrl() const -> std::string;
-        [[nodiscard]] auto isValid() const noexcept -> bool;
+        [[nodiscard]] auto valid() const noexcept -> bool;
+        [[nodiscard]] auto resolved() const noexcept -> bool;
 
         void resolve();
     private:
@@ -57,7 +58,7 @@ namespace mt::network {
         uint16_t m_port{0};
 
         bool m_valid{false};
-
+        bool m_resolved{false};
     };
 
 }  // namespace tristan::network

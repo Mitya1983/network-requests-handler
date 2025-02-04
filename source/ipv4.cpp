@@ -18,9 +18,9 @@ mt::network::Ipv4::Ipv4(const std::string& p_ip) {
     int32_t partIndex = 0;
     for (int64_t index = 0, length = std::ssize(p_ip); index < length; ++index) {
         if (p_ip[index] == '.') {
-            part.clear();
             auto value = std::stoi(part);
             m_ip[partIndex] = *reinterpret_cast<std::byte*>(&value);
+            part.clear();
             ++partIndex;
             continue;
         }

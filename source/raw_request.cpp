@@ -1,7 +1,7 @@
 #include "include/request/impl/raw_request.hpp"
 
 #include "include/response/impl/raw_response.hpp"
-#include "sockets/include/inet_socket.hpp"
+#include "sockets/include/tcp_socket.hpp"
 
 #include <thread>
 mt::network::RawRequest::RawRequest(Url p_url) :
@@ -18,8 +18,8 @@ void mt::network::RawRequest::processRequest() {
         return;
     }
     RequestBase::setStatus(Status::Processed);
-    socket.setHost(uint32_t{m_url.hostIP()}, m_url.host());
-    socket.setPort(m_url.port_network_byte_order());
+    socket.setDestinationHost(uint32_t{m_url.hostIP()}, m_url.host());
+    socket.setDestinationPort(m_url.port_network_byte_order());
     socket.setNonBlocking();
 
     auto start = std::chrono::time_point_cast< std::chrono::microseconds >(std::chrono::system_clock::now());

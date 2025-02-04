@@ -2,7 +2,7 @@
 #include "include/handler/impl/thread_handler.hpp"
 
 #include "include/request/impl/raw_request.hpp"
-#include "sockets/include/inet_socket.hpp"
+#include "sockets/include/tcp_socket.hpp"
 
 #include <thread>
 

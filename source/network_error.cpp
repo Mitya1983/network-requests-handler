@@ -21,7 +21,7 @@ namespace /*anonymous*/
     struct NetworkCategory final : std::error_category {
         [[nodiscard]] const char* name() const noexcept override { return "mt-network-error-category"; }
 
-        [[nodiscard]] std::string message(int ec) const override { return g_error_code_descriptions.at(static_cast< mt::network::ErrorCode >(ec)); }
+        [[nodiscard]] std::string message(int32_t ec) const override { return g_error_code_descriptions.at(static_cast< mt::network::ErrorCode >(ec)); }
     };
 
     inline const NetworkCategory g_network_error_category;
@@ -44,25 +44,49 @@ namespace /*anonymous*/
     struct UrlErrorCategory final : std::error_category {
         [[nodiscard]] const char* name() const noexcept override { return "mt-url-error-category"; }
 
-        [[nodiscard]] std::string message(int ec) const override { return g_url_code_descriptions.at(static_cast< mt::network::UrlErrors >(ec)); }
+        [[nodiscard]] std::string message(int32_t ec) const override { return g_url_code_descriptions.at(static_cast< mt::network::UrlErrors >(ec)); }
     };
 
     inline const UrlErrorCategory g_url_error_category;
 
+    inline const std::map< mt::network::DnsErrors, std::string > g_dns_code_descriptions{
+        {mt::network::DnsErrors::Success,                     "Success"                                           },
+        {mt::network::DnsErrors::Dns_probe_finished_Nxdomain, "Dns probe finished nxdomain"                       },
+        {mt::network::DnsErrors::Server_fail,                 "Server Failure"                                    },
+        {mt::network::DnsErrors::Refused,                     "Query refused"                                     },
+        {mt::network::DnsErrors::Timeout,                     "Request timeout"                                   },
+        {mt::network::DnsErrors::Mismatch,                    "Mismatch Between Primary and Secondary DNS Servers"},
+        {mt::network::DnsErrors::Incorrect,                   "Incorrect or Missing MX Records"                   },
+        {mt::network::DnsErrors::Reverse_lookup_failed,       "Reverse DNS Lookup Failures"                       },
+        {mt::network::DnsErrors::Propagation_delay,           "Propagation Delays"                                },
+        {mt::network::DnsErrors::Incorrect_response_size,     "Incorrect response size"                           },
+        {mt::network::DnsErrors::Response_id_missmatch,       "Response id does not match with query id"          },
+        {mt::network::DnsErrors::Unknown_error,               "Unknown error"                                     },
+    };
+
+    struct DnsErrorCategory final : std::error_category {
+        [[nodiscard]] const char* name() const noexcept override { return "mt-dns-error-category"; }
+
+        [[nodiscard]] std::string message(int32_t ec) const override { return g_dns_code_descriptions.at(static_cast< mt::network::DnsErrors >(ec)); }
+    };
+
+    inline const DnsErrorCategory g_dns_error_category;
+
     inline const std::map< mt::network::HttpErrors, std::string > g_http_code_descriptions{
-        {mt::network::HttpErrors::Unknown_error,            "Unknown error"                                                                   },
+        {mt::network::HttpErrors::Success,                  "Success"                                                                         },
         {mt::network::HttpErrors::Bad_http_header_format,   "Bad http header format"                                                          },
         {mt::network::HttpErrors::Http_bad_response_format, "Bad format of the received http response"                                        },
         {mt::network::HttpErrors::Http_response_size_error, "Content-length and transfer-encoding chunked are not present in response headers"},
+        {mt::network::HttpErrors::Unknown_error,            "Unknown error"                                                                   },
     };
 
     struct HttpErrorCategory final : std::error_category {
         [[nodiscard]] const char* name() const noexcept override { return "mt-http-error-category"; }
 
-        [[nodiscard]] std::string message(int ec) const override { return g_http_code_descriptions.at(static_cast< mt::network::HttpErrors >(ec)); }
+        [[nodiscard]] std::string message(int32_t ec) const override { return g_http_code_descriptions.at(static_cast< mt::network::HttpErrors >(ec)); }
     };
 
-    inline const UrlErrorCategory g_http_error_category;
+    inline const HttpErrorCategory g_http_error_category;
     // inline const HttpErrorCategory g_http_error_category;
     //
     // inline const std::map< mt::network::ResponseError, std::string > g_response_code_descriptions{
@@ -73,7 +97,7 @@ namespace /*anonymous*/
     // struct ResponseErrorCategory final : std::error_category {
     //     [[nodiscard]] const char* name() const noexcept override;
     //
-    //     [[nodiscard]] std::string message(int ec) const override;
+    //     [[nodiscard]] std::string message(int32_t ec) const override;
     // };
     //
     // inline const HttpErrorCategory g_http_error_category;
@@ -101,5 +125,9 @@ auto mt::network::urlErrorCategory() -> const std::error_category& { return g_ur
 auto mt::network::makeError(const HttpErrors p_error) -> std::error_code { return {static_cast< int32_t >(p_error), g_http_error_category}; }
 
 auto mt::network::httpErrorCategory() -> const std::error_category& { return g_http_error_category; }
+
+auto mt::network::makeError(DnsErrors p_error) -> std::error_code { return {static_cast< int32_t >(p_error), g_dns_error_category}; }
+
+auto mt::network::dnsErrorCategory() -> const std::error_category& { return g_dns_error_category; }
 
 // auto mt::network::makeError(const ResponseError p_error) -> std::error_code { return g_response_code_descriptions.at(error); }

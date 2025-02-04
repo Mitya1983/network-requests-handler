@@ -7,11 +7,15 @@
   #include <netdb.h>
 #endif
 
-#include "include/inet_socket.hpp"
+#include "include/udp_socket.hpp"
+#include "include/request/impl/dns_request.hpp"
+#include "include/response/impl/dns_response.hpp"
 
 #include <unordered_map>
 #include <regex>
 #include <cstring>
+
+#include <iostream>
 
 namespace {
 
@@ -310,151 +314,18 @@ auto mt::network::Url::valid() const noexcept -> bool { return m_valid; }
 
 auto mt::network::Url::resolved() const noexcept -> bool { return m_resolved; }
 
-struct DNSHeader {
-    uint16_t id; // Identification
-    uint16_t flags; // Flags
-    uint16_t qdcount; // Number of questions
-    uint16_t ancount; // Number of answers
-    uint16_t nscount; // Number of authority records
-    uint16_t arcount; // Number of additional records
-};
-
-struct Question {
-    uint16_t qtype;
-    uint16_t qclass;
-};
-
-void build_dns_query(const std::string& hostname, uint8_t* buffer, size_t& query_size) {
-    auto* dns_header = reinterpret_cast<DNSHeader*>(buffer);
-    dns_header->id = htons(0x1234); // Random ID
-    dns_header->flags = htons(0x0100); // Standard query
-    dns_header->qdcount = htons(1); // One question
-    dns_header->ancount = 0;
-    dns_header->nscount = 0;
-    dns_header->arcount = 0;
-
-    uint8_t* qname = buffer + sizeof(DNSHeader);
-    const char* hostname_cstr = hostname.c_str();
-    while (*hostname_cstr) {
-        const char* dot = strchr(hostname_cstr, '.');
-        if (!dot) dot = hostname_cstr + strlen(hostname_cstr);
-        *qname++ = dot - hostname_cstr;
-        memcpy(qname, hostname_cstr, dot - hostname_cstr);
-        qname += dot - hostname_cstr;
-        hostname_cstr = (*dot) ? dot + 1 : dot;
-    }
-    *qname++ = 0; // End of hostname
-
-    auto* question = reinterpret_cast<Question*>(qname);
-    question->qtype = htons(1); // Type A
-    question->qclass = htons(1); // Class IN
-
-    query_size = qname + sizeof(Question) - buffer;
+auto mt::network::Url::error() const noexcept -> std::error_code {
+    return m_error;
 }
 
 void mt::network::Url::resolve() {
-    auto host = m_host;
-    if (host.find("www.") == 0) {
-        host.erase(0, 4);
+    DnsRequest request{m_host};
+    request.processRequest();
+    const auto response = request.response();
+    if (const auto error = response->error(); error){
+        m_error = error;
+        return;
     }
-    const auto resolver_results = gethostbyname(host.c_str());
-    if (resolver_results == nullptr) {
-        switch (h_errno) {
-            case HOST_NOT_FOUND: {
-                throw NetworkException{UrlErrors::Not_found_error};
-            }
-            case TRY_AGAIN: {
-                throw NetworkException{UrlErrors::Try_again_error};
-            }
-            case NO_RECOVERY: {
-                throw NetworkException{UrlErrors::No_recovery_error};
-            }
-            case NO_DATA: {
-                throw NetworkException{UrlErrors::No_data_error};
-            }
-            default: {
-                throw NetworkException{UrlErrors::Unknown_error};
-            }
-        }
-    }
-    uint8_t index = 0;
-    while (true) {
-        const auto address = resolver_results->h_addr_list[index];
-        if (address == nullptr) {
-            break;
-        }
-        uint32_t ip;
-        std::memmove(&ip, address, 4);
-        m_host_ip.emplace_back(ip);
-        ++index;
-    }
-
-    mt::sockets::TcpSocket socket(sockets::SocketType::DATA);
-
-    // #include <iostream>
-    // #include <cstring>
-    // #include <sys/socket.h>
-    // #include <arpa/inet.h>
-    // #include <unistd.h>
-    //
-    // #define DNS_PORT 53
-    // #define DNS_SERVER "8.8.8.8" // Google's public DNS server
-    //
-    // #pragma pack(push, 1)
-    // struct DNSHeader {
-    //     uint16_t id; // Identification
-    //     uint16_t flags; // Flags
-    //     uint16_t qdcount; // Number of questions
-    //     uint16_t ancount; // Number of answers
-    //     uint16_t nscount; // Number of authority records
-    //     uint16_t arcount; // Number of additional records
-    // };
-    //
-    // struct Question {
-    //     uint16_t qtype;
-    //     uint16_t qclass;
-    // };
-    // #pragma pack(pop)
-    //
-
-    //
-    // int main() {
-    //     int sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    //     if (sock < 0) {
-    //         perror("socket");
-    //         return 1;
-    //     }
-    //
-    //     struct sockaddr_in dest;
-    //     dest.sin_family = AF_INET;
-    //     dest.sin_port = htons(DNS_PORT);
-    //     inet_pton(AF_INET, DNS_SERVER, &dest.sin_addr);
-    //
-    //     uint8_t buffer[512];
-    //     size_t query_size;
-    //     build_dns_query("example.com", buffer, query_size);
-    //
-    //     if (sendto(sock, buffer, query_size, 0, (struct sockaddr*)&dest, sizeof(dest)) < 0) {
-    //         perror("sendto");
-    //         close(sock);
-    //         return 1;
-    //     }
-    //
-    //     socklen_t len = sizeof(dest);
-    //     ssize_t response_size = recvfrom(sock, buffer, sizeof(buffer), 0, (struct sockaddr*)&dest, &len);
-    //     if (response_size < 0) {
-    //         perror("recvfrom");
-    //         close(sock);
-    //         return 1;
-    //     }
-    //
-    //     std::cout << "Received DNS response of size " << response_size << " bytes" << std::endl;
-    //
-    //     close(sock);
-    //     return 0;
-    // }
-
-    // https://cabulous.medium.com/dns-message-how-to-read-query-and-response-message-cfebcb4fe817
-
-    // https://linux.die.net/man/3/res_query
+    m_host_ip = std::move(response->resolved_ips());
+    m_resolved = true;
 }

@@ -6,7 +6,7 @@
 #include "include/network_utility.hpp"
 #include "include/http/http_header_names.hpp"
 
-#include "sockets/include/inet_socket.hpp"
+#include "sockets/include/tcp_socket.hpp"
 #include "sockets/include/socket_error.hpp"
 
 #include <thread>
@@ -20,8 +20,8 @@ template < class Derived > void ::mt::network::HttpRequest< Derived >::processRe
 
     RequestBase::setStatus(Status::Processed);
 
-    socket.setHost(uint32_t{m_url.hostIP()}, m_url.host());
-    socket.setPort(m_url.port_network_byte_order());
+    socket.setDestinationHost(uint32_t{m_url.hostIP()}, m_url.host());
+    socket.setDestinationPort(m_url.port_network_byte_order());
     socket.setNonBlocking();
     auto start = std::chrono::time_point_cast< std::chrono::microseconds >(std::chrono::system_clock::now());
     int8_t ip_index{1};
@@ -36,7 +36,7 @@ template < class Derived > void ::mt::network::HttpRequest< Derived >::processRe
 
         if (not RequestBase::checkSocketOperationErrorAndTimeOut(socket, start)) {
             if (const auto& ips = m_url.hostIPList(); ip_index < std::ssize(ips)) {
-                socket.setHost(uint32_t{ips[ip_index]});
+                socket.setDestinationHost(uint32_t{ips[ip_index]});
                 ++ip_index;
             } else {
                 return;

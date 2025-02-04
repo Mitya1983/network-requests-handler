@@ -2,9 +2,6 @@
 #include "include/http/http_header_names.hpp"
 #include "include/network_utility.hpp"
 
-#include "sockets/include/inet_socket.hpp"
-#include "sockets/include/socket_error.hpp"
-
 #include <thread>
 
 mt::network::GetRequest::GetRequest(Url url) :

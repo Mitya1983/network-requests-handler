@@ -36,6 +36,21 @@ namespace mt::network {
         Unsupported_scheme,
     };
 
+    enum class DnsErrors: uint8_t {
+        Success,
+        Dns_probe_finished_Nxdomain,
+        Server_fail,
+        Refused,
+        Timeout,
+        Mismatch,
+        Incorrect,
+        Reverse_lookup_failed,
+        Propagation_delay,
+        Incorrect_response_size,
+        Response_id_missmatch,
+        Unknown_error,
+    };
+
     enum class HttpErrors: uint8_t {
         Success,
         Bad_http_header_format,
@@ -67,6 +82,8 @@ namespace mt::network {
     [[nodiscard]] auto urlErrorCategory() -> const std::error_category&;
     [[nodiscard]] auto makeError(HttpErrors p_error) -> std::error_code;
     [[nodiscard]] auto httpErrorCategory() -> const std::error_category&;
+    [[nodiscard]] auto makeError(DnsErrors p_error) -> std::error_code;
+    [[nodiscard]] auto dnsErrorCategory() -> const std::error_category&;
     // [[nodiscard]] auto makeError(ResponseError error) -> std::error_code;
 
 }  // namespace mt::network

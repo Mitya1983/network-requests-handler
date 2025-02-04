@@ -2,7 +2,7 @@
 
 #include "include/network_error.hpp"
 
-#include "sockets/include/inet_socket.hpp"
+#include "sockets/include/tcp_socket.hpp"
 #include "sockets/include/socket_error.hpp"
 
 namespace {

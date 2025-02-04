@@ -70,7 +70,7 @@ auto mt::network::utility::getUuid() -> std::string {
     std::uniform_int_distribution< uint8_t > distribution_one(48, 57);
     std::uniform_int_distribution< uint8_t > distribution_two(97, 102);
     std::uniform_int_distribution< uint8_t > distribution_choice(1, 2);
-    for (int i = 0; i < 36; ++i) {
+    for (int32_t i = 0; i < 36; ++i) {
         std::mt19937_64 generator(std::chrono::system_clock::now().time_since_epoch().count());
         uint8_t which_distribution = distribution_choice(generator);
         uint8_t uuid_value = 0;
@@ -153,9 +153,9 @@ auto mt::network::utility::string(std::vector< std::byte >::const_iterator begin
 auto mt::network::utility::capitalizeHttpHeader(const std::string& source) -> std::string {
     std::string result;
     bool capitalize{true};
-    for (const auto ch : source) {
+    for (const auto ch: source) {
         if (capitalize) {
-            result += static_cast<char>(std::toupper(ch));
+            result += static_cast< char >(std::toupper(ch));
             capitalize = false;
             continue;
         }
@@ -165,4 +165,38 @@ auto mt::network::utility::capitalizeHttpHeader(const std::string& source) -> st
         result += ch;
     }
     return result;
+}
+
+auto mt::network::utility::toNetworkByteOrder(uint16_t p_value) -> uint16_t {
+    if constexpr (std::endian::native == std::endian::big) {
+        return p_value;
+    }
+    const auto ptr = reinterpret_cast< std::byte* >(&p_value);
+    std::swap(ptr[0], ptr[1]);
+    return *reinterpret_cast< uint16_t* >(ptr);
+}
+
+auto mt::network::utility::toHostByteOrder(uint16_t p_value) -> uint16_t {
+    if constexpr (std::endian::native == std::endian::big) {
+        return p_value;
+    }
+    const auto ptr = reinterpret_cast< std::byte* >(&p_value);
+    std::swap(ptr[0], ptr[1]);
+    return *reinterpret_cast< uint16_t* >(ptr);
+}
+
+auto mt::network::utility::toHostByteOrder(uint32_t p_value) -> uint32_t {
+    if constexpr (std::endian::native == std::endian::big) {
+        return p_value;
+    }
+    const auto ptr = reinterpret_cast< std::byte* >(&p_value);
+    std::swap(ptr[0], ptr[3]);
+    std::swap(ptr[1], ptr[2]);
+    return *reinterpret_cast< uint32_t* >(ptr);
+}
+
+auto mt::network::utility::generateRandomInteger(const int64_t p_lower_bound, const int64_t p_upper_bound) -> int64_t {
+    std::mt19937_64 generator(std::chrono::system_clock::now().time_since_epoch().count());
+    std::uniform_int_distribution distribution(p_lower_bound, p_upper_bound);
+    return distribution(generator);
 }

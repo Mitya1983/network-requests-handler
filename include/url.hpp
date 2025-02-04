@@ -3,6 +3,7 @@
 
 #include "ipv4.hpp"
 #include <string>
+#include <system_error>
 #include <vector>
 
 
@@ -42,6 +43,7 @@ namespace mt::network {
         [[nodiscard]] auto composeUrl() const -> std::string;
         [[nodiscard]] auto valid() const noexcept -> bool;
         [[nodiscard]] auto resolved() const noexcept -> bool;
+        [[nodiscard]] auto error() const noexcept -> std::error_code;
 
         void resolve();
     private:
@@ -54,6 +56,8 @@ namespace mt::network {
         std::string m_fragment;
 
         std::vector< Ipv4 > m_host_ip{};
+
+        std::error_code m_error;
 
         uint16_t m_port{0};
 

@@ -1,7 +1,7 @@
 #ifndef HTTP_PARAM_HPP
 #define HTTP_PARAM_HPP
 
-#include "include/http/concepts.hpp"
+#include "include/concepts.hpp"
 
 #include <string>
 #include <vector>
@@ -66,8 +66,10 @@ namespace mt::network::http {
         [[nodiscard]] auto parameterValue(const std::string& p_parameter_name) const -> std::optional< std::string >;
         [[nodiscard]] auto empty() const -> bool;
         [[nodiscard]] auto begin() noexcept -> std::vector< Parameter >::iterator;
+        [[nodiscard]] auto begin() const noexcept -> std::vector< Parameter >::const_iterator;
         [[nodiscard]] auto cbegin() const noexcept -> std::vector< Parameter >::const_iterator;
         [[nodiscard]] auto end() noexcept -> std::vector< Parameter >::iterator;
+        [[nodiscard]] auto end() const noexcept -> std::vector< Parameter >::const_iterator;
         [[nodiscard]] auto cend() const noexcept -> std::vector< Parameter >::const_iterator;
 
     private:

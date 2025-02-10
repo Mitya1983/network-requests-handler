@@ -18,17 +18,17 @@ auto mt::network::http::HttpHeaders::headerValue(const std::string& p_header_nam
 
 auto mt::network::http::HttpHeaders::empty() const -> bool { return m_headers.empty(); }
 
-auto mt::network::http::HttpHeaders::begin() noexcept -> std::vector< Header>::iterator {
-    return m_headers.begin();
-}
+auto mt::network::http::HttpHeaders::begin() noexcept -> std::vector< Header >::iterator { return m_headers.begin(); }
+
+auto mt::network::http::HttpHeaders::begin() const noexcept -> std::vector< Header >::const_iterator { return m_headers.begin(); }
 
 auto mt::network::http::HttpHeaders::cbegin() const noexcept -> std::vector< Header>::const_iterator {
     return m_headers.cbegin();
 }
 
-auto mt::network::http::HttpHeaders::end() noexcept -> std::vector< Header>::iterator {
-    return m_headers.end();
-}
+auto mt::network::http::HttpHeaders::end() noexcept -> std::vector< Header >::iterator { return m_headers.end(); }
+
+auto mt::network::http::HttpHeaders::end() const noexcept -> std::vector< Header >::const_iterator { return m_headers.end(); }
 
 auto mt::network::http::HttpHeaders::cend() const noexcept -> std::vector< Header>::const_iterator {
     return m_headers.cend();

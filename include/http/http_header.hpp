@@ -3,7 +3,7 @@
 
 #include "include/network_error.hpp"
 
-#include "include/http/concepts.hpp"
+#include "include/concepts.hpp"
 
 #include <string>
 #include <vector>
@@ -91,8 +91,10 @@ namespace mt::network::http {
         [[nodiscard]] auto headerValue(const std::string& p_header_name) const -> std::optional< std::string >;
         [[nodiscard]] auto empty() const -> bool;
         [[nodiscard]] auto begin() noexcept -> std::vector< Header >::iterator;
+        [[nodiscard]] auto begin() const noexcept -> std::vector< Header >::const_iterator;
         [[nodiscard]] auto cbegin() const noexcept -> std::vector< Header >::const_iterator;
         [[nodiscard]] auto end() noexcept -> std::vector< Header >::iterator;
+        [[nodiscard]] auto end() const noexcept -> std::vector< Header >::const_iterator;
         [[nodiscard]] auto cend() const noexcept -> std::vector< Header >::const_iterator;
 
     private:

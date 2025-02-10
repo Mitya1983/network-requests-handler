@@ -3,7 +3,7 @@
 
 #include "include/response/responses.hpp"
 
-#include "include/url.hpp"
+#include "include/url/url.hpp"
 
 #include <filesystem>
 #include <vector>
@@ -54,8 +54,7 @@ namespace mt::network {
         void setTimeOut(std::chrono::seconds p_timeout);
         [[nodiscard]] auto id() const noexcept -> uint64_t;
         [[nodiscard]] auto url() const noexcept -> const Url&;
-        [[nodiscard]] auto errorCode() const noexcept -> std::error_code;
-        [[nodiscard]] auto error() const noexcept -> bool;
+        [[nodiscard]] auto error() const noexcept -> std::error_code;
         [[nodiscard]] auto status() const noexcept -> Status;
         [[nodiscard]] auto isPaused() const noexcept -> bool;
         [[nodiscard]] auto isCanceled() const noexcept -> bool;

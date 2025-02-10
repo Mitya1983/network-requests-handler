@@ -1,7 +1,9 @@
-#ifndef URL_HPP
-#define URL_HPP
+#ifndef INCLUDE_URL_HPP
+#define INCLUDE_URL_HPP
 
-#include "ipv4.hpp"
+#include "include/url/url_param.hpp"
+
+#include "include/ipv4.hpp"
 #include <string>
 #include <system_error>
 #include <vector>
@@ -25,7 +27,7 @@ namespace mt::network {
         void setPort(uint16_t p_port, std::endian p_endian = std::endian::big);
         void setPort(const std::string& p_port);
         void setPath(std::string p_path);
-        void setQuery(std::string p_query);
+        void addParam(url::Parameter p_parameter);
         void setFragment(std::string p_fragment);
 
         [[nodiscard]] auto scheme() const noexcept -> const std::string&;
@@ -38,9 +40,9 @@ namespace mt::network {
         [[nodiscard]] auto port_local_byte_order() const noexcept -> uint16_t;
         [[nodiscard]] auto port_network_byte_order() const noexcept -> uint16_t;
         [[nodiscard]] auto path() const noexcept -> const std::string&;
-        [[nodiscard]] auto query() const noexcept -> const std::string&;
+        [[nodiscard]] auto query() const -> std::string;
         [[nodiscard]] auto fragment() const noexcept -> const std::string&;
-        [[nodiscard]] auto composeUrl() const -> std::string;
+        [[nodiscard]] auto composeUrl(bool p_include_port = false) const -> std::string;
         [[nodiscard]] auto valid() const noexcept -> bool;
         [[nodiscard]] auto resolved() const noexcept -> bool;
         [[nodiscard]] auto error() const noexcept -> std::error_code;
@@ -52,8 +54,9 @@ namespace mt::network {
         std::string m_user_password;
         std::string m_host;
         std::string m_path;
-        std::string m_query;
         std::string m_fragment;
+
+        url::UrlParams m_params;
 
         std::vector< Ipv4 > m_host_ip{};
 
@@ -66,4 +69,4 @@ namespace mt::network {
     };
 
 }  // namespace tristan::network
-#endif  //URL_HPP
+#endif  //INCLUDE_URL_HPP

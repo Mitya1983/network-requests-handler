@@ -32,9 +32,7 @@ auto mt::network::RequestBase::id() const noexcept -> uint64_t { return m_id; }
 
 auto mt::network::RequestBase::url() const noexcept -> const Url& { return m_url; }
 
-auto mt::network::RequestBase::errorCode() const noexcept -> std::error_code { return m_error; }
-
-auto mt::network::RequestBase::error() const noexcept -> bool { return bool{m_error}; }
+auto mt::network::RequestBase::error() const noexcept -> std::error_code { return m_error; }
 
 auto mt::network::RequestBase::status() const noexcept -> Status { return m_status; }
 

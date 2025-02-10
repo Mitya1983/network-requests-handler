@@ -18,8 +18,12 @@ auto mt::network::http::HttpParams::empty() const -> bool { return m_params.empt
 
 auto mt::network::http::HttpParams::begin() noexcept -> std::vector< Parameter >::iterator { return m_params.begin(); }
 
+auto mt::network::http::HttpParams::begin() const noexcept -> std::vector< Parameter >::const_iterator { return m_params.begin(); }
+
 auto mt::network::http::HttpParams::cbegin() const noexcept -> std::vector< Parameter >::const_iterator { return m_params.cbegin(); }
 
 auto mt::network::http::HttpParams::end() noexcept -> std::vector< Parameter >::iterator { return m_params.end(); }
+
+auto mt::network::http::HttpParams::end() const noexcept -> std::vector< Parameter >::const_iterator { return m_params.end(); }
 
 auto mt::network::http::HttpParams::cend() const noexcept -> std::vector< Parameter >::const_iterator { return m_params.cend(); }

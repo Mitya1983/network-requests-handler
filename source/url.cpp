@@ -1,5 +1,4 @@
-#include "include/url.hpp"
-#include "include/network_utility.hpp"
+#include "include/url/url.hpp"
 #include "include/network_schemes.hpp"
 #include "include/network_error.hpp"
 
@@ -13,9 +12,6 @@
 
 #include <unordered_map>
 #include <regex>
-#include <cstring>
-
-#include <iostream>
 
 namespace {
 
@@ -51,13 +47,17 @@ mt::network::Url::Url(const std::string& p_url) {
     }
     bool user_name_parsed{true};
     bool user_password_parsed{true};
-    if (p_url.find('@') != std::string::npos) {
+    if (const std::regex user_password(".*:\\/\\/.+:.*@.+\\/"); std::regex_search(p_url, user_password)) {
         user_name_parsed = false;
     }
+    // if (p_url.find('@') != std::string::npos) {
+    //     user_name_parsed = false;
+    // }
     bool host_parsed{false};
     bool port_parsed{true};
     bool path_parsed{false};
-    bool query_parsed{false};
+    bool query_parsed{true};
+    bool fragment_parsed{true};
     for (int64_t index = 0, length = std::ssize(p_url); index < length; ++index) {
         if (not scheme_parsed) {
             if (p_url[index] == ':') {
@@ -79,6 +79,7 @@ mt::network::Url::Url(const std::string& p_url) {
                 continue;
             }
             m_user_name += p_url[index];
+            continue;
         }
         if (not user_password_parsed) {
             if (p_url[index] == '@') {
@@ -86,6 +87,7 @@ mt::network::Url::Url(const std::string& p_url) {
                 continue;
             }
             m_user_password += p_url[index];
+            continue;
         }
         if (not host_parsed) {
             if (p_url[index] == ':') {
@@ -111,21 +113,26 @@ mt::network::Url::Url(const std::string& p_url) {
         if (not path_parsed) {
             if (p_url[index] == '?') {
                 path_parsed = true;
+                query_parsed = false;
                 continue;
             }
             m_path += p_url[index];
             continue;
         }
         if (not query_parsed) {
-            if (p_url[index] == '#') {
+            auto iter = p_url.begin() + index;
+            m_params = url::UrlParams{iter, p_url.end()};
+            if (*iter == '#') {
                 query_parsed = true;
+                fragment_parsed = false;
                 continue;
             }
-            m_query += p_url[index];
-            continue;
+            break;
         }
-        //If we reach this point only fragment left
-        m_fragment += p_url[index];
+        if (not fragment_parsed) {
+            m_fragment = std::string{p_url.begin() + index, p_url.end()};
+            break;
+        }
     }
     if (m_path.empty()) {
         m_path = "/";
@@ -161,25 +168,7 @@ void mt::network::Url::setAuthority(std::string p_host, std::string p_user_name,
     }
     m_host = std::move(p_host);
     m_user_name = std::move(p_user_name);
-    size_t char_to_encode = 0;
-    while (true) {
-        char_to_encode = m_user_name.find_first_of(" !@#$%&*()+=[];:\',/?", char_to_encode);
-        if (char_to_encode == std::string::npos) {
-            break;
-        }
-        m_user_name.replace(char_to_encode, 1, g_percentage_encoding.at(m_user_name.at(char_to_encode)));
-        ++char_to_encode;
-    }
     m_user_password = std::move(p_user_password);
-    char_to_encode = 0;
-    while (true) {
-        char_to_encode = m_user_password.find_first_of(" !@#$%&*()+=[];:\',/?", char_to_encode);
-        if (char_to_encode == std::string::npos) {
-            break;
-        }
-        m_user_password.replace(char_to_encode, 1, g_percentage_encoding.at(m_user_name.at(char_to_encode)));
-        ++char_to_encode;
-    }
 }
 
 void mt::network::Url::addHostIP(std::string p_ip) { m_host_ip.emplace_back(std::move(p_ip)); }
@@ -198,41 +187,15 @@ void mt::network::Url::setPort(const std::string& p_port) { m_port = std::stoi(p
 
 void mt::network::Url::setPath(std::string p_path) {
     m_path = std::move(p_path);
-    size_t char_to_encode = 0;
-    while (true) {
-        char_to_encode = m_path.find_first_of(" !@#$%&*()+=[];:\',?", char_to_encode);
-        if (char_to_encode == std::string::npos) {
-            break;
-        }
-        m_path.replace(char_to_encode, 1, g_percentage_encoding.at(m_path.at(char_to_encode)));
-        ++char_to_encode;
-    }
 }
 
-void mt::network::Url::setQuery(std::string p_query) {
-    m_query = std::move(p_query);
-    size_t char_to_encode = 0;
-    while (true) {
-        char_to_encode = m_query.find_first_of(" !@#$%*()+[]:\',/?", char_to_encode);
-        if (char_to_encode == std::string::npos) {
-            break;
-        }
-        m_query.replace(char_to_encode, 1, g_percentage_encoding.at(m_query.at(char_to_encode)));
-        ++char_to_encode;
-    }
+void mt::network::Url::addParam(url::Parameter p_parameter){
+    m_params.addParameter(std::move(p_parameter));
+
 }
 
 void mt::network::Url::setFragment(std::string p_fragment) {
     m_fragment = std::move(p_fragment);
-    size_t char_to_encode = 0;
-    while (true) {
-        char_to_encode = m_fragment.find_first_of(" !@#$%&*()+=[];:\',/?", char_to_encode);
-        if (char_to_encode == std::string::npos) {
-            break;
-        }
-        m_fragment.replace(char_to_encode, 1, g_percentage_encoding.at(m_fragment.at(char_to_encode)));
-        ++char_to_encode;
-    }
 }
 
 auto mt::network::Url::scheme() const noexcept -> const std::string& { return m_scheme; }
@@ -268,11 +231,21 @@ auto mt::network::Url::port_network_byte_order() const noexcept -> uint16_t { re
 
 auto mt::network::Url::path() const noexcept -> const std::string& { return m_path; }
 
-auto mt::network::Url::query() const noexcept -> const std::string& { return m_query; }
+auto mt::network::Url::query() const -> std::string {
+    std::string query;
+    for (const auto& parameter : m_params) {
+        query += parameter.name;
+        query += '=';
+        query += parameter.value;
+        query += '&';
+    }
+    query.erase(query.size() - 1);
+    return query;
+}
 
 auto mt::network::Url::fragment() const noexcept -> const std::string& { return m_fragment; }
 
-auto mt::network::Url::composeUrl() const -> std::string {
+auto mt::network::Url::composeUrl(const bool p_include_port) const -> std::string {
     std::string uri;
     if (not m_scheme.empty()) {
         uri += m_scheme;
@@ -293,19 +266,29 @@ auto mt::network::Url::composeUrl() const -> std::string {
         } else {
             uri += std::string{m_host_ip.at(0)};
         }
-        if (m_port != 0) {
+        if (m_port != 0 && p_include_port) {
             uri += ':';
             uri += std::to_string(m_port);
         }
+        uri += '/';
     }
     uri += m_path;
-    if (not m_query.empty()) {
+    if (not m_params.empty()) {
         uri += '?';
-        uri += m_query;
+        uri += query();
     }
     if (not m_fragment.empty()) {
         uri += '#';
         uri += m_fragment;
+    }
+    while (true) {
+        size_t char_to_encode = 0;
+        char_to_encode = m_fragment.find_first_of(" !@#$%&*()+=[];:\',/?", char_to_encode);
+        if (char_to_encode == std::string::npos) {
+            break;
+        }
+        uri.replace(char_to_encode, 1, g_percentage_encoding.at(uri.at(char_to_encode)));
+        ++char_to_encode;
     }
     return uri;
 }

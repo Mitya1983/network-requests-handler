@@ -141,7 +141,7 @@ mt::network::Url::Url(const std::string& p_url) {
         m_path = "/";
     }
     if (const auto port = schemes::getNetworkSchemeDefaultPort(m_scheme); port != 0) {
-        setPort(port, std::endian::native);
+        setPort(utility::toNetworkByteOrder(port));
     }
     m_valid = true;
 }
@@ -155,7 +155,7 @@ void mt::network::Url::setScheme(std::string p_scheme) {
     }
     m_scheme = std::move(p_scheme);
     if (const auto port = schemes::getNetworkSchemeDefaultPort(m_scheme); port != 0) {
-        setPort(port);
+        setPort(utility::toNetworkByteOrder(port));
     }
 }
 

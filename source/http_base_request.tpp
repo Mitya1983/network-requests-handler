@@ -48,7 +48,6 @@ template < class Derived > void ::mt::network::HttpRequest< Derived >::processRe
         }
     }
     prepareRequest();
-    auto debug = utility::string(m_request_data.begin(), m_request_data.end());
     int64_t bytes_written = 0;
     const int64_t bytes_to_write = std::ssize(m_request_data);
     RequestBase::setStatus(Status::Writing);

@@ -22,7 +22,8 @@ namespace mt::network {
         [[nodiscard]] auto resolved_ips() -> std::vector< Ipv4 >&;
 
     private:
-        std::vector< std::byte > m_raw_data;
+        std::vector< std::byte > m_raw_data;  // Consider not to store this
+        std::vector< std::string > m_aliases;
         std::vector< Ipv4 > m_ipv4s;
         std::error_code m_error;
 

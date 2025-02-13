@@ -24,7 +24,7 @@ namespace mt::network {
         void setScheme(std::string p_scheme);
         void setAuthority(std::string p_host, std::string p_user_name = "", std::string p_user_password = "");
         void addHostIP(std::string p_ip);
-        void setPort(uint16_t p_port, std::endian p_endian = std::endian::big);
+        void setPort(uint16_t p_port);
         void setPort(const std::string& p_port);
         void setPath(std::string p_path);
         void addParam(url::Parameter p_parameter);
@@ -64,7 +64,7 @@ namespace mt::network {
 
         uint16_t m_port{0};
 
-        bool m_valid{false};
+        bool m_valid{true};
         bool m_resolved{false};
     };
 

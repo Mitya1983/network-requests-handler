@@ -8,7 +8,7 @@
 
 namespace {
 
-    std::unordered_map< char, std::string > percentage_encoding = {
+    std::unordered_map< char, std::string > g_percentage_encoding = {
         {' ',  "%20"},
         {'!',  "%21"},
         {'@',  "%40"},
@@ -45,8 +45,8 @@ void mt::network::utility::checkFileName(std::filesystem::path& p_path) {
             if (file_counter == 1) {
                 file_name += "(" + std::to_string(file_counter) + ")";
             } else {
-                auto pos = file_name.find("(" + std::to_string(file_counter - 1) + ")");
-                auto replace_counter = static_cast< uint16_t >(log10(file_counter) + 1);
+                const auto pos = file_name.find("(" + std::to_string(file_counter - 1) + ")");
+                const auto replace_counter = static_cast< uint16_t >(log10(file_counter) + 1);
                 if (file_counter == 10 || file_counter == 100 || file_counter == 1000 || file_counter == 10000) {
                     file_name.replace(pos + 1, replace_counter - 1, std::to_string(file_counter));
                 } else {
@@ -62,6 +62,35 @@ void mt::network::utility::checkFileName(std::filesystem::path& p_path) {
             break;
         }
     }
+}
+
+void mt::network::utility::encodeToUrlEncoding(std::vector< std::byte >& range) {
+    // TODO: That does not work
+    auto iter = range.begin();
+    while (iter != range.end()) {
+        if (auto ch = static_cast< char >(*iter); mustBeEncoded(ch)) {
+            auto& code = g_percentage_encoding.at(ch);
+            *iter = static_cast<std::byte>(*code.data());
+            const auto code_ptr = reinterpret_cast<std::byte*>(code.data() + 1);
+            std::copy_n(code_ptr, 2, std::inserter(range, std::next(iter)));
+            iter += 2;
+        } else {
+            ++iter;
+        }
+    }
+}
+
+auto mt::network::utility::mustBeEncoded(const char symbol) -> bool {
+     return g_percentage_encoding.contains(symbol);
+}
+
+auto mt::network::utility::urlEncodeSequence(const char symbol) -> std::array< uint8_t, 3 > {
+    std::array<uint8_t, 3> code{};
+    if (g_percentage_encoding.contains(symbol)) {
+        auto encoding = g_percentage_encoding.at(symbol);
+        std::copy_n(encoding.begin(), 3, code.begin());
+    }
+    return code;
 }
 
 auto mt::network::utility::getUuid() -> std::string {
@@ -110,7 +139,7 @@ auto mt::network::utility::encodeUrl(const std::string& p_string_to_encode) -> s
         if (char_to_encode == std::string::npos) {
             break;
         }
-        result.replace(char_to_encode, 1, percentage_encoding.at(result.at(char_to_encode)));
+        result.replace(char_to_encode, 1, g_percentage_encoding.at(result.at(char_to_encode)));
         ++char_to_encode;
     }
     return result;
@@ -122,14 +151,14 @@ auto mt::network::utility::decodeUrl(const std::string& p_string_to_encode) -> s
     while (iterator != p_string_to_encode.end()) {
         if (*iterator == '%') {
             std::string encoded_char{iterator, iterator + 2};
-            if (auto iter = std::ranges::find_if(percentage_encoding,
+            if (auto iter = std::ranges::find_if(g_percentage_encoding,
                                                  [&encoded_char](const std::pair< char, std::string >& map_pair) -> bool {
                                                      if (map_pair.second == encoded_char) {
                                                          return true;
                                                      }
                                                      return false;
                                                  });
-                iter != percentage_encoding.end()) {
+                iter != g_percentage_encoding.end()) {
                 result += iter->first;
                 ++ ++iterator;
                 continue;
@@ -174,6 +203,16 @@ auto mt::network::utility::toNetworkByteOrder(uint16_t p_value) -> uint16_t {
     const auto ptr = reinterpret_cast< std::byte* >(&p_value);
     std::swap(ptr[0], ptr[1]);
     return *reinterpret_cast< uint16_t* >(ptr);
+}
+
+auto mt::network::utility::toNetworkByteOrder(uint32_t p_value) -> uint16_t {
+    if constexpr (std::endian::native == std::endian::big) {
+        return p_value;
+    }
+    const auto ptr = reinterpret_cast< std::byte* >(&p_value);
+    std::swap(ptr[0], ptr[3]);
+    std::swap(ptr[1], ptr[2]);
+    return *reinterpret_cast< uint32_t* >(ptr);
 }
 
 auto mt::network::utility::toHostByteOrder(uint16_t p_value) -> uint16_t {

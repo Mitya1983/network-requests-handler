@@ -6,6 +6,7 @@
 #include <filesystem>
 #include <vector>
 #include <algorithm>
+#include <array>
 
 namespace mt::network::utility {
     /**
@@ -13,7 +14,11 @@ namespace mt::network::utility {
      * \param p_path std::filesystem::path&
      */
     void checkFileName(std::filesystem::path& p_path);
+    void encodeToUrlEncoding(std::vector<std::byte>& range);
+    [[nodiscard]] auto mustBeEncoded(char symbol) -> bool;
+    [[nodiscard]] auto urlEncodeSequence(char symbol) -> std::array< uint8_t, 3 >;
     /**
+    void encodeUrl(const std::string& p_string_to_encode);
      * \brief Generates UUID Version 4.
      * \return UUID as a std::string.
      */
@@ -28,6 +33,7 @@ namespace mt::network::utility {
     [[nodiscard]] auto string(std::vector< std::byte >::const_iterator begin, std::vector< std::byte >::const_iterator end) -> std::string;
     [[nodiscard]] auto capitalizeHttpHeader(const std::string& source) -> std::string;
     [[nodiscard]] auto toNetworkByteOrder(uint16_t p_value) -> uint16_t;
+    [[nodiscard]] auto toNetworkByteOrder(uint32_t p_value) -> uint16_t;
     [[nodiscard]] auto toHostByteOrder(uint16_t p_value) -> uint16_t;
     [[nodiscard]] auto toHostByteOrder(uint32_t p_value) -> uint32_t;
     [[nodiscard]] auto generateRandomInteger(int64_t p_lower_bound = std::numeric_limits< int64_t >::min(), int64_t p_upper_bound = std::numeric_limits< int64_t >::max())
@@ -35,30 +41,31 @@ namespace mt::network::utility {
 
     [[nodiscard]] auto equal(auto p_left, auto p_right) -> bool
         requires(std::is_same_v< std::decay_t< decltype(p_left) >, std::byte > or std::is_same_v< std::decay_t< decltype(p_right) >, std::byte >)
-                and (concepts::byte_comparable< std::decay_t< decltype(p_left) > > or concepts::byte_comparable< std::decay_t< decltype(p_right) > >) {
-        using LeftType = std::decay_t<decltype(p_left)>;
-        using RightType = std::decay_t<decltype(p_right)>;
-        if constexpr (std::is_same_v<LeftType, RightType>) {
+                and (concepts::byte_comparable< std::decay_t< decltype(p_left) > > or concepts::byte_comparable< std::decay_t< decltype(p_right) > >)
+    {
+        using LeftType = std::decay_t< decltype(p_left) >;
+        using RightType = std::decay_t< decltype(p_right) >;
+        if constexpr (std::is_same_v< LeftType, RightType >) {
             return p_left == p_right;
-        }
-        else if constexpr (std::is_same_v<LeftType, std::byte>) {
-            return p_left == static_cast<std::byte>(p_right);
+        } else if constexpr (std::is_same_v< LeftType, std::byte >) {
+            return p_left == static_cast< std::byte >(p_right);
         } else {
-            return static_cast<std::byte>(p_left) == p_right;
+            return static_cast< std::byte >(p_left) == p_right;
         }
     }
+
     [[nodiscard]] auto less(auto p_left, auto p_right) -> bool
         requires(std::is_same_v< std::decay_t< decltype(p_left) >, std::byte > or std::is_same_v< std::decay_t< decltype(p_right) >, std::byte >)
-                and (concepts::byte_comparable< std::decay_t< decltype(p_left) > > or concepts::byte_comparable< std::decay_t< decltype(p_right) > >) {
-        using LeftType = std::decay_t<decltype(p_left)>;
-        using RightType = std::decay_t<decltype(p_right)>;
-        if constexpr (std::is_same_v<LeftType, RightType>) {
+                and (concepts::byte_comparable< std::decay_t< decltype(p_left) > > or concepts::byte_comparable< std::decay_t< decltype(p_right) > >)
+    {
+        using LeftType = std::decay_t< decltype(p_left) >;
+        using RightType = std::decay_t< decltype(p_right) >;
+        if constexpr (std::is_same_v< LeftType, RightType >) {
             return p_left < p_right;
-        }
-        else if constexpr (std::is_same_v<LeftType, std::byte>) {
-            return p_left < static_cast<std::byte>(p_right);
+        } else if constexpr (std::is_same_v< LeftType, std::byte >) {
+            return p_left < static_cast< std::byte >(p_right);
         } else {
-            return static_cast<std::byte>(p_left) < p_right;
+            return static_cast< std::byte >(p_left) < p_right;
         }
     }
 

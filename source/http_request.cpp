@@ -26,18 +26,19 @@ void mt::network::GetRequest::prepareRequest() {
                 utility::copy(param.name.begin(), param.name.end(), m_request_data);
                 if (!param.value.empty()) {
                     m_request_data.push_back(static_cast< std::byte >('='));
-                    utility::copy(param.value.begin(), param.value.end(), m_request_data);
+                    auto encodedValue = utility::encodeUrl(param.value);
+                    utility::copy(encodedValue.begin(), encodedValue.end(), m_request_data);
                 }
                 ++param_count;
             }
         }
-        if (!m_url.query().empty()) {
+        if (const auto& l_query = m_url.query(); not l_query.empty() ) {
             if (not m_params.empty()) {
                 m_request_data.push_back(static_cast< std::byte >('&'));
             } else {
                 m_request_data.push_back(static_cast< std::byte >('?'));
             }
-            utility::copy(m_url.query().begin(), m_url.query().end(), m_request_data);
+            utility::copy(l_query.begin(), l_query.end(), m_request_data);
         }
         std::string to_insert = " HTTP/1.1\r\n";
         utility::copy(to_insert.begin(), to_insert.end(), m_request_data);
@@ -45,7 +46,8 @@ void mt::network::GetRequest::prepareRequest() {
             for (const auto& header: m_headers) {
                 utility::copy(header.name.begin(), header.name.end(), m_request_data);
                 m_request_data.push_back(static_cast< std::byte >(':'));
-                utility::copy(header.value.begin(), header.value.end(), m_request_data);
+                auto encodedValue = utility::encodeUrl(header.value);
+                utility::copy(encodedValue.begin(), encodedValue.end(), m_request_data);
                 m_request_data.push_back(static_cast< std::byte >('\r'));
                 m_request_data.push_back(static_cast< std::byte >('\n'));
             }

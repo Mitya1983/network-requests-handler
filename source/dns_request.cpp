@@ -75,9 +75,10 @@ void mt::network::DnsRequest::processRequest() {
             return;
         }
         socket.setDestinationHost(uint32_t{Ipv4{dns_server}});
-        socket.setDestinationPort(utility::toNetworkByteOrder(53));
+        socket.setDestinationPort(utility::toNetworkByteOrder(uint16_t{53}));
         socket.setLocalHost(uint32_t{Ipv4{"0.0.0.0"}});
-        socket.setLocalPort(utility::toNetworkByteOrder(utility::generateRandomInteger(49152, std::numeric_limits<uint16_t>::max())));
+        socket.setLocalPort(utility::toNetworkByteOrder(static_cast<uint16_t>(utility::generateRandomInteger(49152, std::numeric_limits<uint16_t>::max()))));
+        // socket.setNonBlocking(true);
         socket.bind();
         socket.write(m_request_data);
         if (const auto error = socket.error(); error) {

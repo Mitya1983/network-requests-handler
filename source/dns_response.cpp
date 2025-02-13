@@ -52,6 +52,8 @@ namespace {
         uint16_t type{0};
         uint16_t class_{0};
     };
+
+    std::string nameFromPointer(std::vector< std::byte >::iterator iter, std::vector< std::byte >& data);
 }  // namespace
 
 mt::network::DnsResponse::DnsResponse(std::vector< std::byte > data, const uint16_t p_id) :
@@ -67,29 +69,103 @@ mt::network::DnsResponse::DnsResponse(std::vector< std::byte > data, const uint1
         m_error = makeError(DnsErrors::Response_id_missmatch);
         return;
     }
-    if (const auto error = static_cast<std::byte>(dns_header.return_code & uint16_t{0x000F}); not utility::equal(error, 0)) {
+    if (const auto error = static_cast< std::byte >(dns_header.return_code & uint16_t{0x000F}); not utility::equal(error, 0)) {
         if (utility::less(error, 9)) {
-            m_error = makeError(static_cast<DnsErrors>(error));
+            m_error = makeError(static_cast< DnsErrors >(error));
         } else {
             m_error = makeError(DnsErrors::Unknown_error);
         }
         return;
     }
     Question question{iter};
-
-    for (uint16_t index = 0; index < dns_header.answers_count; ++index) {
-        //NOTE: For now only ip are substantial
-        iter+= 11;
-        if (utility::equal(*iter, sizeof(uint32_t))) {
+    while (iter != m_raw_data.end()) {
+        if (utility::equal(*iter, 192)) {
             ++iter;
-            m_ipv4s.emplace_back(*reinterpret_cast< uint32_t* >(&*iter));
-            iter += sizeof(uint32_t);
+            if (auto name = nameFromPointer(m_raw_data.begin() + static_cast< int8_t >(*iter), m_raw_data); m_aliases.empty() or name != m_aliases.back()) {
+                m_aliases.push_back(std::move(name));
+            }
+            ++iter;
+        }
+        const auto response_type = utility::toHostByteOrder(*reinterpret_cast< uint16_t* >(&*iter));
+        iter += 2;
+        [[maybe_unused]] const auto response_class = utility::toHostByteOrder(*reinterpret_cast< uint16_t* >(&*iter));
+        iter += 2;
+        [[maybe_unused]] const auto valid_till = utility::toHostByteOrder(*reinterpret_cast< uint32_t* >(&*iter));
+        iter += 4;
+        const auto data_length = utility::toHostByteOrder(*reinterpret_cast< uint16_t* >(&*iter));
+        iter += 2;
+        switch (response_type) {
+            case 1: {
+                m_ipv4s.emplace_back(*reinterpret_cast< uint32_t* >(&*iter));
+                iter += sizeof(int32_t);
+                break;
+            }
+            case 2: {
+                break;
+            }
+            case 5: {
+                auto end = iter + data_length;
+                std::string alias;
+                while (iter != end) {
+                    if (utility::equal(*iter, 192)) {
+                        ++iter;
+                        alias += nameFromPointer(m_raw_data.begin() + static_cast< int8_t >(*iter), m_raw_data);
+                        ++iter;
+                        continue;
+                    }
+                    const auto length = static_cast< uint8_t >(*iter);
+                    ++iter;
+                    alias += utility::string(iter, iter + length);
+                    iter += length;
+                    if (not utility::equal(*iter, 0)) {
+                        alias += '.';
+                    } else {
+                        ++iter;
+                        break;
+                    }
+                }
+                if (m_aliases.back() != alias) {
+                    m_aliases.push_back(std::move(alias));
+                }
+                break;
+            }
+            case 6:
+            case 12:
+            case 15:
+            case 16:
+            case 28:
+            case 33:
+            case 35:
+            case 257:
+            default: {
+                break;
+            }
         }
     }
 }
 
 auto mt::network::DnsResponse::error() const -> const std::error_code& { return m_error; }
 
-auto mt::network::DnsResponse::resolved_ips() -> std::vector< Ipv4 >& {
-    return m_ipv4s;
-}
+auto mt::network::DnsResponse::resolved_ips() -> std::vector< Ipv4 >& { return m_ipv4s; }
+
+namespace {
+    std::string nameFromPointer(std::vector< std::byte >::iterator iter, std::vector< std::byte >& data) {  //NOLINT
+        std::string result;
+        while (not mt::network::utility::equal(*iter, 0)) {
+            if (mt::network::utility::equal(*iter, 192)) {
+                ++iter;
+                result += nameFromPointer(data.begin() + static_cast< int8_t >(*iter), data);
+                // ++iter;
+                break;
+            }
+            const auto length = static_cast< uint8_t >(*iter);
+            ++iter;
+            result += mt::network::utility::string(iter, iter + length);
+            iter += length;
+            if (not mt::network::utility::equal(*iter, 0)) {
+                result += '.';
+            }
+        }
+        return result;
+    }
+}  // namespace

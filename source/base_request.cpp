@@ -187,6 +187,9 @@ mt::network::RequestBase::RequestBase(Url p_url) :
     m_id = g_id.fetch_add(1);
     if (not m_url.resolved()) {
         m_url.resolve();
+        if (const auto error = m_url.error(); error) {
+            m_error = error;
+        }
     }
 }
 

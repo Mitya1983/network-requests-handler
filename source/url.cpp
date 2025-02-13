@@ -6,6 +6,7 @@
   #include <netdb.h>
 #endif
 
+#include "include/network_utility.hpp"
 #include "include/udp_socket.hpp"
 #include "include/request/impl/dns_request.hpp"
 #include "include/response/impl/dns_response.hpp"
@@ -41,6 +42,7 @@ namespace {
 }  //End of unnamed namespace
 
 mt::network::Url::Url(const std::string& p_url) {
+    m_valid = false;
     bool scheme_parsed{false};
     if (p_url.find("://") == std::string::npos) {
         scheme_parsed = true;
@@ -125,6 +127,7 @@ mt::network::Url::Url(const std::string& p_url) {
             if (*iter == '#') {
                 query_parsed = true;
                 fragment_parsed = false;
+                ++iter;
                 continue;
             }
             break;
@@ -173,14 +176,8 @@ void mt::network::Url::setAuthority(std::string p_host, std::string p_user_name,
 
 void mt::network::Url::addHostIP(std::string p_ip) { m_host_ip.emplace_back(std::move(p_ip)); }
 
-void mt::network::Url::setPort(uint16_t p_port, const std::endian p_endian) {
-    if (p_endian == std::endian::big) {
+void mt::network::Url::setPort(const uint16_t p_port) {
         m_port = p_port;
-        return;
-    }
-    auto ptr = reinterpret_cast< std::byte* >(&p_port);
-    std::swap(ptr[0], ptr[1]);
-    m_port = *reinterpret_cast< uint16_t* >(ptr);
 }
 
 void mt::network::Url::setPort(const std::string& p_port) { m_port = std::stoi(p_port); }
@@ -239,7 +236,9 @@ auto mt::network::Url::query() const -> std::string {
         query += parameter.value;
         query += '&';
     }
-    query.erase(query.size() - 1);
+    if (not query.empty()) {
+        query.erase(query.size() - 1);
+    }
     return query;
 }
 
@@ -303,7 +302,16 @@ auto mt::network::Url::error() const noexcept -> std::error_code {
 
 void mt::network::Url::resolve() {
     DnsRequest request{m_host};
-    request.processRequest();
+    try {
+        request.processRequest();
+    } catch (const std::runtime_error&) {
+        m_error = makeError(mt::network::ErrorCode::Host_not_found);
+        return;
+    }
+    if (const auto error = request.error(); error) {
+        m_error = error;
+        return;
+    }
     const auto response = request.response();
     if (const auto error = response->error(); error){
         m_error = error;

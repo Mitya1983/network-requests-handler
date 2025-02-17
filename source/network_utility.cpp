@@ -70,8 +70,8 @@ void mt::network::utility::encodeToUrlEncoding(std::vector< std::byte >& range) 
     while (iter != range.end()) {
         if (auto ch = static_cast< char >(*iter); mustBeEncoded(ch)) {
             auto& code = g_percentage_encoding.at(ch);
-            *iter = static_cast<std::byte>(*code.data());
-            const auto code_ptr = reinterpret_cast<std::byte*>(code.data() + 1);
+            *iter = static_cast< std::byte >(*code.data());
+            const auto code_ptr = reinterpret_cast< std::byte* >(code.data() + 1);
             std::copy_n(code_ptr, 2, std::inserter(range, std::next(iter)));
             iter += 2;
         } else {
@@ -80,12 +80,10 @@ void mt::network::utility::encodeToUrlEncoding(std::vector< std::byte >& range) 
     }
 }
 
-auto mt::network::utility::mustBeEncoded(const char symbol) -> bool {
-     return g_percentage_encoding.contains(symbol);
-}
+auto mt::network::utility::mustBeEncoded(const char symbol) -> bool { return g_percentage_encoding.contains(symbol); }
 
 auto mt::network::utility::urlEncodeSequence(const char symbol) -> std::array< uint8_t, 3 > {
-    std::array<uint8_t, 3> code{};
+    std::array< uint8_t, 3 > code{};
     if (g_percentage_encoding.contains(symbol)) {
         auto encoding = g_percentage_encoding.at(symbol);
         std::copy_n(encoding.begin(), 3, code.begin());
@@ -172,10 +170,9 @@ auto mt::network::utility::decodeUrl(const std::string& p_string_to_encode) -> s
 
 auto mt::network::utility::string(std::vector< std::byte >::const_iterator begin, const std::vector< std::byte >::const_iterator end) -> std::string {
     std::string result;
-    while (begin != end) {
-        result += static_cast< char >(*begin);
-        ++begin;
-    }
+    std::transform(begin, end, std::back_inserter(result), [](std::byte byte) -> char {
+        return static_cast< char >(byte);
+    });
     return result;
 }
 

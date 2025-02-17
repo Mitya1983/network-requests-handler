@@ -123,7 +123,7 @@ mt::network::Url::Url(const std::string& p_url) {
         }
         if (not query_parsed) {
             auto iter = p_url.begin() + index;
-            m_params = url::UrlParams{iter, p_url.end()};
+            m_params = Params{std::string_view{iter, p_url.end()}};
             if (*iter == '#') {
                 query_parsed = true;
                 fragment_parsed = false;
@@ -186,7 +186,7 @@ void mt::network::Url::setPath(std::string p_path) {
     m_path = std::move(p_path);
 }
 
-void mt::network::Url::addParam(url::Parameter p_parameter){
+void mt::network::Url::addParam(Parameter p_parameter){
     m_params.addParameter(std::move(p_parameter));
 
 }

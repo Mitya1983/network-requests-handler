@@ -239,10 +239,14 @@ template < class Derived > void mt::network::HttpRequest< Derived >::addHeader(h
     m_headers.addHeader(std::move(header));
 }
 
-template < class Derived > void mt::network::HttpRequest< Derived >::addParam(http::Parameter parameter) {
+template < class Derived > void mt::network::HttpRequest< Derived >::addParam(Parameter parameter) {
     if (parameter.name.empty()) {
         return;
     }
     m_params.addParameter(std::move(parameter));
+}
+
+template < class Derived > auto mt::network::HttpRequest< Derived >::param(const std::string_view p_param_name) const -> std::string_view {
+    return m_params.parameterValue(p_param_name).value_or(std::string_view{});
 }
 #endif  // SOURCE_HTTP_BASE_REQUEST_TPP

@@ -1,7 +1,7 @@
 #ifndef INCLUDE_URL_HPP
 #define INCLUDE_URL_HPP
 
-#include "include/url/url_param.hpp"
+#include "include/param.hpp"
 
 #include "include/ipv4.hpp"
 #include <string>
@@ -27,7 +27,7 @@ namespace mt::network {
         void setPort(uint16_t p_port);
         void setPort(const std::string& p_port);
         void setPath(std::string p_path);
-        void addParam(url::Parameter p_parameter);
+        void addParam(Parameter p_parameter);
         void setFragment(std::string p_fragment);
 
         [[nodiscard]] auto scheme() const noexcept -> const std::string&;
@@ -56,7 +56,7 @@ namespace mt::network {
         std::string m_path;
         std::string m_fragment;
 
-        url::UrlParams m_params;
+        Params m_params;
 
         std::vector< Ipv4 > m_host_ip{};
 

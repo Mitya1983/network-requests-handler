@@ -5,7 +5,7 @@
 
 #include "include/request/impl/private/base_request.hpp"
 
-#include "include/http/http_param.hpp"
+#include "include/param.hpp"
 #include "include/http/http_header.hpp"
 
 namespace mt::network {
@@ -20,16 +20,18 @@ namespace mt::network {
         void processRequest();
 
         void addHeader(http::Header header);
-        void addParam(http::Parameter parameter);
+        void addParam(Parameter parameter);
+
+        [[nodiscard]] auto param(std::string_view p_param_name) const -> std::string_view;
+
     protected:
         explicit HttpRequest(Url p_url);
-
 
         void prepareRequest() { static_cast< Derived* >(this)->prepareRequest(); }
 
         std::string m_request_name;
         http::HttpHeaders m_headers;
-        http::HttpParams m_params;
+        Params m_params;
         bool m_request_composed;
     };
 }  // namespace mt::network

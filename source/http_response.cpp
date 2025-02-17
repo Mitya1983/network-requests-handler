@@ -13,7 +13,7 @@ mt::network::HttpResponse::HttpResponse(const uint64_t p_id, std::vector< std::b
         return;
     }
     m_status = static_cast< http::Status >(std::stoi(utility::string(p_headers_data.begin() + 9, p_headers_data.begin() + 12)));
-    m_response_headers = http::HttpHeaders(std::move(p_headers_data));
+    m_response_headers = http::HttpHeaders(std::string_view{reinterpret_cast<char*>(p_headers_data.data()), p_headers_data.size()});
 }
 
 auto mt::network::HttpResponse::error() const -> std::error_code { return m_error; }

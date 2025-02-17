@@ -4,6 +4,55 @@
 
 #include <algorithm>
 
+mt::network::http::Header::Header(std::string_view::const_iterator& p_begin, const std::string_view::const_iterator p_end) {
+    bool name_parsed{false};
+    bool l_value{false};
+    bool carriage_return{false};
+    while (p_begin != p_end) {
+        if (*p_begin == ':') {
+            if (not name_parsed) {
+                name_parsed = true;
+                ++p_begin;
+                continue;
+            }
+        }
+        if (*p_begin == '\r') {
+            carriage_return = true;
+            ++p_begin;
+            continue;
+        }
+        if (*p_begin == ' ' and name_parsed and not l_value) {
+            ++p_begin;
+            continue;
+        }
+        if (*p_begin == '\n') {
+            if (carriage_return) {
+                ++p_begin;
+                return;
+            }
+            if (not l_value) {
+                throw NetworkException(HttpErrors::Bad_http_header_format);
+            }
+        }
+        if (name_parsed and not l_value) {
+            l_value = true;
+        }
+        if (l_value) {
+            value += *p_begin;
+        } else {
+            name += *p_begin;
+        }
+        ++p_begin;
+    }
+}
+
+mt::network::http::HttpHeaders::HttpHeaders(std::string_view p_data) {
+    auto iter = p_data.begin();
+    while (iter != p_data.end()) {
+        m_headers.emplace_back(iter, p_data.end());
+    }
+}
+
 void mt::network::http::HttpHeaders::addHeader(Header p_header) { m_headers.emplace_back(std::move(p_header)); }
 
 auto mt::network::http::HttpHeaders::headerValue(const std::string& p_header_name) const -> std::optional< std::string > {

@@ -176,6 +176,10 @@ auto mt::network::utility::string(std::vector< std::byte >::const_iterator begin
     return result;
 }
 
+auto mt::network::utility::string_view(std::vector< std::byte >& p_data) -> std::string_view {
+    return {reinterpret_cast<char*>(p_data.data()), p_data.size()};
+}
+
 auto mt::network::utility::capitalizeHttpHeader(const std::string& source) -> std::string {
     std::string result;
     bool capitalize{true};

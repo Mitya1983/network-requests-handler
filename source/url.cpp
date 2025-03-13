@@ -301,6 +301,9 @@ auto mt::network::Url::error() const noexcept -> std::error_code {
 }
 
 void mt::network::Url::resolve() {
+    if (m_host.starts_with("www.")) {
+        m_host.erase(0, 4);
+    }
     DnsRequest request{m_host};
     try {
         request.processRequest();
@@ -318,5 +321,9 @@ void mt::network::Url::resolve() {
         return;
     }
     m_host_ip = std::move(response->resolved_ips());
+    if (m_host_ip.empty()) {
+        m_error = makeError(mt::network::ErrorCode::Host_not_found);
+        return;
+    }
     m_resolved = true;
 }

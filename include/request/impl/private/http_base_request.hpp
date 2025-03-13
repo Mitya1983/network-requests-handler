@@ -8,8 +8,13 @@
 #include "include/param.hpp"
 #include "include/http/http_header.hpp"
 
+#include "resumable-coroutine/include/resumable_coroutine.hpp"
+
+
+
 namespace mt::network {
     template < class Derived > class HttpRequest : public RequestBase {
+        friend class AsyncRequestHandler;
     public:
         HttpRequest(const HttpRequest& p_other) = delete;
         HttpRequest(HttpRequest&& p_other) noexcept = delete;
@@ -19,6 +24,9 @@ namespace mt::network {
 
         void processRequest();
 
+        void setClientCertificate(std::filesystem::path p_path);
+        void setClientKey(std::filesystem::path p_path);
+
         void addHeader(http::Header header);
         void addParam(Parameter parameter);
 
@@ -27,8 +35,11 @@ namespace mt::network {
     protected:
         explicit HttpRequest(Url p_url);
 
-        void prepareRequest() { static_cast< Derived* >(this)->prepareRequest(); }
+        void _prepareRequest() { static_cast< Derived* >(this)->_prepareRequest(); }
+        auto _asyncProcessRequest() -> mt::ResumableCoroutine;
 
+        std::filesystem::path m_client_certificate;
+        std::filesystem::path m_client_key;
         std::string m_request_name;
         http::HttpHeaders m_headers;
         Params m_params;

@@ -194,7 +194,7 @@ mt::network::RequestBase::RequestBase(Url p_url) :
 }
 
 void mt::network::RequestBase::addResponseData(std::vector< std::byte > p_data) {
-    const auto data_size = p_data.size();
+    const auto data_size = std::ssize(p_data);
     if (not m_output_to_file) {
         if (std::holds_alternative<std::monostate>(m_response)) {
             throw std::runtime_error("Should not happened");

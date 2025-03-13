@@ -50,18 +50,20 @@ namespace /*anonymous*/
     inline const UrlErrorCategory g_url_error_category;
 
     inline const std::map< mt::network::DnsErrors, std::string > g_dns_code_descriptions{
-        {mt::network::DnsErrors::Success,                     "Success"                                           },
-        {mt::network::DnsErrors::Dns_probe_finished_Nxdomain, "Dns probe finished nxdomain"                       },
-        {mt::network::DnsErrors::Server_fail,                 "Server Failure"                                    },
-        {mt::network::DnsErrors::Refused,                     "Query refused"                                     },
-        {mt::network::DnsErrors::Timeout,                     "Request timeout"                                   },
-        {mt::network::DnsErrors::Mismatch,                    "Mismatch Between Primary and Secondary DNS Servers"},
-        {mt::network::DnsErrors::Incorrect,                   "Incorrect or Missing MX Records"                   },
-        {mt::network::DnsErrors::Reverse_lookup_failed,       "Reverse DNS Lookup Failures"                       },
-        {mt::network::DnsErrors::Propagation_delay,           "Propagation Delays"                                },
-        {mt::network::DnsErrors::Incorrect_response_size,     "Incorrect response size"                           },
-        {mt::network::DnsErrors::Response_id_missmatch,       "Response id does not match with query id"          },
-        {mt::network::DnsErrors::Unknown_error,               "Unknown error"                                     },
+        {mt::network::DnsErrors::Success,                 "Success"                                                                                             },
+        {mt::network::DnsErrors::Format_error,            "The name server was unable to interpret the request due to a format error"                           },
+        {mt::network::DnsErrors::Server_fail,             "Server Failure"                                                                                      },
+        {mt::network::DnsErrors::Nxdomain,                "Some name that ought to exist, does not exist"                                                       },
+        {mt::network::DnsErrors::Not_implemented,         "The name server does not support the specified Opcode"                                               },
+        {mt::network::DnsErrors::Refused,                 "The name server refuses to perform the specified operation for policy or security reasons"           },
+        {mt::network::DnsErrors::Yxdomain,                "Some name that ought not to exist, does exist"                                                       },
+        {mt::network::DnsErrors::Yxrrset,                 "Some RRset that ought not to exist, does exist"                                                      },
+        {mt::network::DnsErrors::Nxrrset,                 "Some RRset that ought to exist, does not exist"                                                      },
+        {mt::network::DnsErrors::Not_auth,                "The server is not authoritative for the zone named in the Zone Section"                              },
+        {mt::network::DnsErrors::Not_zone,                "A name used in the Prerequisite or Update Section is not within the zone denoted by the Zone Sectiona"},
+        {mt::network::DnsErrors::Incorrect_response_size, "Incorrect response size"                                                                             },
+        {mt::network::DnsErrors::Response_id_missmatch,   "Response id does not match with query id"                                                            },
+        {mt::network::DnsErrors::Unknown_error,           "Unknown error"                                                                                       },
     };
 
     struct DnsErrorCategory final : std::error_category {

@@ -2,6 +2,8 @@
 
 #ifndef INCLUDE_REQUEST_IMPL_DNS_REQUEST_HPP
 #define INCLUDE_REQUEST_IMPL_DNS_REQUEST_HPP
+#include "include/ipv4.hpp"
+
 #include <string>
 #include <vector>
 #include <memory>
@@ -24,10 +26,10 @@ namespace mt::network {
         [[nodiscard]] auto response() const -> std::shared_ptr< DnsResponse >;
 
     private:
+        std::array< std::string, 13 > m_dns_servers;
         std::vector< std::byte > m_request_data;
         std::error_code m_error;
         std::shared_ptr< DnsResponse > m_response;
-
         uint16_t m_id{0};
     };
 }  // namespace mt::network

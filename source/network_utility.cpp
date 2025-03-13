@@ -5,6 +5,7 @@
 #include <cmath>
 #include <random>
 #include <unordered_map>
+#include <fstream>
 
 namespace {
 
@@ -176,9 +177,7 @@ auto mt::network::utility::string(std::vector< std::byte >::const_iterator begin
     return result;
 }
 
-auto mt::network::utility::string_view(std::vector< std::byte >& p_data) -> std::string_view {
-    return {reinterpret_cast<char*>(p_data.data()), p_data.size()};
-}
+auto mt::network::utility::string_view(std::vector< std::byte >& p_data) -> std::string_view { return {reinterpret_cast< char* >(p_data.data()), p_data.size()}; }
 
 auto mt::network::utility::capitalizeHttpHeader(const std::string& source) -> std::string {
     std::string result;
@@ -239,4 +238,24 @@ auto mt::network::utility::generateRandomInteger(const int64_t p_lower_bound, co
     std::mt19937_64 generator(std::chrono::system_clock::now().time_since_epoch().count());
     std::uniform_int_distribution distribution(p_lower_bound, p_upper_bound);
     return distribution(generator);
+}
+
+auto mt::network::utility::getLocalDnsIp() -> std::string {
+    std::filesystem::path resolve_path{"/etc/resolv.conf"};
+    if (not std::filesystem::exists(resolve_path)) {
+        return {};
+    }
+    std::ifstream file{resolve_path};
+    if (not file.is_open()) {
+        return {};
+    }
+    std::string line;
+    while (std::getline(file, line)) {
+        if (line.find("nameserver") != std::string::npos) {
+            line = line.substr(line.find(' ') + 1);
+            break;
+        }
+    }
+    file.close();
+    return line;
 }

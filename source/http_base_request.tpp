@@ -11,43 +11,57 @@
 
 #include <thread>
 template < class Derived > void ::mt::network::HttpRequest< Derived >::processRequest() {
-    sockets::TcpSocket socket;
+    std::unique_ptr<sockets::TcpSocket> socket;
+    if (not m_client_certificate.empty() or not m_client_key.empty()) {
+        socket = std::make_unique<sockets::TcpSocket>(m_client_certificate, m_client_key);
+    } else {
+        socket = std::make_unique<sockets::TcpSocket>(m_ssl);
+    }
 
-    if (socket.error()) {
-        RequestBase::setError(socket.error());
+    if (const auto error = socket->error(); error) {
+        RequestBase::setError(error);
         return;
     }
 
     RequestBase::setStatus(Status::Processed);
 
-    socket.setDestinationHost(uint32_t{m_url.hostIP()}, m_url.host());
-    socket.setDestinationPort(m_url.port_network_byte_order());
-    socket.setNonBlocking();
+    socket->setDestinationHost(uint32_t{m_url.hostIP()}, m_url.host());
+    socket->setDestinationPort(m_url.port_network_byte_order());
+    socket->setLocalPort(utility::toNetworkByteOrder(uint16_t{23253}));
+    socket->setNonBlocking();
+    socket->bind();
     auto start = std::chrono::time_point_cast< std::chrono::microseconds >(std::chrono::system_clock::now());
     int8_t ip_index{1};
-    while (not socket.connected()) {
+    while (not socket->connected()) {
         if (m_paused.load(std::memory_order_relaxed)) {
             return;
         }
         if (m_canceled.load(std::memory_order_relaxed)) {
             return;
         }
-        socket.connect(m_ssl);
+        socket->connect();
 
-        if (not RequestBase::checkSocketOperationErrorAndTimeOut(socket, start)) {
+        if (not RequestBase::checkSocketOperationErrorAndTimeOut(*socket, start)) {
             if (const auto& ips = m_url.hostIPList(); ip_index < std::ssize(ips)) {
-                socket.setDestinationHost(uint32_t{ips[ip_index]});
+                if (not m_client_certificate.empty() or not m_client_key.empty()) {
+                    socket = std::make_unique<sockets::TcpSocket>(m_client_certificate, m_client_key);
+                } else {
+                    socket = std::make_unique<sockets::TcpSocket>(m_ssl);
+                }
+                socket->setDestinationHost(uint32_t{ips[ip_index]}, m_url.host());
+                socket->setDestinationPort(m_url.port_network_byte_order());
+                socket->setNonBlocking();
                 ++ip_index;
             } else {
                 return;
             }
         }
-        if (socket.error()) {
-            socket.resetError();
+        if (socket->error()) {
+            socket->resetError();
             std::this_thread::sleep_for(m_sleeping_interval);
         }
     }
-    prepareRequest();
+    _prepareRequest();
     int64_t bytes_written = 0;
     const int64_t bytes_to_write = std::ssize(m_request_data);
     RequestBase::setStatus(Status::Writing);
@@ -63,12 +77,12 @@ template < class Derived > void ::mt::network::HttpRequest< Derived >::processRe
         const uint16_t current_frame_size = m_max_frame_size < bytes_remain ? m_max_frame_size : bytes_remain;
         const auto begin = std::begin(m_request_data) + bytes_written;
         const auto end = begin + current_frame_size;
-        bytes_written += static_cast< int64_t >(socket.write(begin, end));
-        if (not RequestBase::checkSocketOperationErrorAndTimeOut(socket, start)) {
+        bytes_written += static_cast< int64_t >(socket->write(begin, end));
+        if (not RequestBase::checkSocketOperationErrorAndTimeOut(*socket, start)) {
             return;
         }
-        if (socket.error()) {
-            socket.resetError();
+        if (socket->error()) {
+            socket->resetError();
             std::this_thread::sleep_for(m_sleeping_interval);
         }
     }
@@ -84,15 +98,15 @@ template < class Derived > void ::mt::network::HttpRequest< Derived >::processRe
             return;
         }
         std::array delimiter{'\r', '\n', '\r', '\n'};
-        auto data = socket.readUntil(delimiter);
-        if (not RequestBase::checkSocketOperationErrorAndTimeOut(socket, start)) {
+        auto data = socket->readUntil(delimiter);
+        if (not RequestBase::checkSocketOperationErrorAndTimeOut(*socket, start)) {
             return;
         }
-        if (const auto error = socket.error(); error && socket.error().value() != static_cast< int >(mt::sockets::Error::READ_DONE)) {
+        if (const auto error = socket->error(); error && socket->error().value() != static_cast< int >(mt::sockets::Error::READ_DONE)) {
             if (not data.empty()) {
                 std::copy(std::make_move_iterator(std::begin(data)), std::make_move_iterator(std::end(data)), std::back_inserter(headers_data));
             }
-            socket.resetError();
+            socket->resetError();
             std::this_thread::sleep_for(m_sleeping_interval);
             continue;
         }
@@ -106,16 +120,16 @@ template < class Derived > void ::mt::network::HttpRequest< Derived >::processRe
         break;
     }
 
-    auto response = std::get< std::shared_ptr< HttpResponse > >(m_response);
+    const auto response = std::get< std::shared_ptr< HttpResponse > >(m_response);
     if (response->status() != http::Status::Ok) {
         RequestBase::setStatus(Status::Done);
         return;
     }
 
-    if (auto content_length = response->headers().headerValue(mt::network::http::header_names::content_length)) {
+    if (const auto content_length = response->headers().headerValue(mt::network::http::header_names::content_length)) {
         m_bytes_to_read = std::stoll(content_length.value());
         if (m_bytes_to_read != 0) {
-            socket.resetError();
+            socket->resetError();
             RequestBase::setStatus(Status::Reading);
             int64_t bytes_read = 0;
             start = std::chrono::time_point_cast< std::chrono::microseconds >(std::chrono::system_clock::now());
@@ -126,10 +140,10 @@ template < class Derived > void ::mt::network::HttpRequest< Derived >::processRe
                 if (m_canceled.load(std::memory_order_relaxed)) {
                     return;
                 }
-                auto bytes_remain = m_bytes_to_read - bytes_read;
-                uint16_t current_frame_size = m_max_frame_size < bytes_remain ? m_max_frame_size : bytes_remain;
-                auto data = socket.read(current_frame_size);
-                if (not RequestBase::checkSocketOperationErrorAndTimeOut(socket, start)) {
+                const auto bytes_remain = m_bytes_to_read - bytes_read;
+                const uint16_t current_frame_size = m_max_frame_size < bytes_remain ? m_max_frame_size : bytes_remain;
+                auto data = socket->read(current_frame_size);
+                if (not RequestBase::checkSocketOperationErrorAndTimeOut(*socket, start)) {
                     return;
                 }
                 if (not data.empty()) {
@@ -139,15 +153,15 @@ template < class Derived > void ::mt::network::HttpRequest< Derived >::processRe
                         return;
                     }
                 }
-                if (socket.error()) {
-                    socket.resetError();
+                if (socket->error()) {
+                    socket->resetError();
                     std::this_thread::sleep_for(m_sleeping_interval);
                 }
             }
         } else {
             RequestBase::setStatus(Status::Done);
         }
-    } else if (auto transfer_encoding = response->headers().headerValue(mt::network::http::header_names::transfer_encoding)) {
+    } else if (const auto transfer_encoding = response->headers().headerValue(mt::network::http::header_names::transfer_encoding)) {
         if (transfer_encoding.value().find("chunked") == std::string::npos) {
             RequestBase::setStatus(Status::Done);
             return;
@@ -160,12 +174,12 @@ template < class Derived > void ::mt::network::HttpRequest< Derived >::processRe
                 return;
             }
             std::array delimiter{'\r', '\n'};
-            auto chunk_size = socket.readUntil(delimiter);
-            if (not RequestBase::checkSocketOperationErrorAndTimeOut(socket, start)) {
+            auto chunk_size = socket->readUntil(delimiter);
+            if (not RequestBase::checkSocketOperationErrorAndTimeOut(*socket, start)) {
                 return;
             }
-            if (socket.error() && socket.error().value() != static_cast< int32_t >(mt::sockets::Error::READ_DONE)) {
-                socket.resetError();
+            if (socket->error() && socket->error().value() != static_cast< int32_t >(mt::sockets::Error::READ_DONE)) {
+                socket->resetError();
                 std::this_thread::sleep_for(m_sleeping_interval);
                 continue;
             }
@@ -174,7 +188,7 @@ template < class Derived > void ::mt::network::HttpRequest< Derived >::processRe
             if (bytes_to_read == 0) {
                 break;
             }
-            socket.resetError();
+            socket->resetError();
             int64_t bytes_read = 0;
             start = std::chrono::time_point_cast< std::chrono::microseconds >(std::chrono::system_clock::now());
             while (bytes_read < bytes_to_read) {
@@ -184,10 +198,10 @@ template < class Derived > void ::mt::network::HttpRequest< Derived >::processRe
                 if (m_canceled.load(std::memory_order_relaxed)) {
                     return;
                 }
-                auto bytes_remain = bytes_to_read - bytes_read;
-                uint16_t current_frame_size = m_max_frame_size < bytes_remain ? m_max_frame_size : bytes_remain;
-                auto data = socket.read(current_frame_size);
-                if (not RequestBase::checkSocketOperationErrorAndTimeOut(socket, start)) {
+                const auto bytes_remain = bytes_to_read - bytes_read;
+                const uint16_t current_frame_size = m_max_frame_size < bytes_remain ? m_max_frame_size : bytes_remain;
+                auto data = socket->read(current_frame_size);
+                if (not RequestBase::checkSocketOperationErrorAndTimeOut(*socket, start)) {
                     return;
                 }
                 if (not data.empty()) {
@@ -197,17 +211,17 @@ template < class Derived > void ::mt::network::HttpRequest< Derived >::processRe
                         return;
                     }
                 }
-                if (socket.error()) {
-                    socket.resetError();
+                if (socket->error()) {
+                    socket->resetError();
                     std::this_thread::sleep_for(m_sleeping_interval);
                 }
             }
-            auto redundant_data = socket.read(2);
-            if (not RequestBase::checkSocketOperationErrorAndTimeOut(socket, start)) {
+            auto redundant_data = socket->read(2);
+            if (not RequestBase::checkSocketOperationErrorAndTimeOut(*socket, start)) {
                 return;
             }
-            if (socket.error()) {
-                socket.resetError();
+            if (socket->error()) {
+                socket->resetError();
                 std::this_thread::sleep_for(std::chrono::milliseconds(m_sleeping_interval));
             }
         }
@@ -230,6 +244,218 @@ mt::network::HttpRequest< Derived >::HttpRequest(Url p_url) :
     if (m_url.port_local_byte_order() == 443) {
         m_ssl = true;
     }
+}
+
+template < class Derived > auto mt::network::HttpRequest< Derived >::_asyncProcessRequest() -> mt::ResumableCoroutine {
+    std::unique_ptr<sockets::TcpSocket> socket;
+    if (not m_client_certificate.empty() or not m_client_key.empty()) {
+        socket = std::make_unique<sockets::TcpSocket>(m_client_certificate, m_client_key);
+    } else {
+        socket = std::make_unique<sockets::TcpSocket>(m_ssl);
+    }
+
+    if (socket->error()) {
+        RequestBase::setError(socket->error());
+        co_return;
+    }
+
+    RequestBase::setStatus(Status::Processed);
+
+    socket->setDestinationHost(uint32_t{m_url.hostIP()}, m_url.host());
+    socket->setDestinationPort(m_url.port_network_byte_order());
+    socket->setNonBlocking();
+    auto start = std::chrono::time_point_cast< std::chrono::microseconds >(std::chrono::system_clock::now());
+    int8_t ip_index{1};
+    while (not socket->connected()) {
+        if (m_paused.load(std::memory_order_relaxed)) {
+            co_return;
+        }
+        if (m_canceled.load(std::memory_order_relaxed)) {
+            co_return;
+        }
+        socket->connect();
+
+        if (not RequestBase::checkSocketOperationErrorAndTimeOut(*socket, start)) {
+            if (const auto& ips = m_url.hostIPList(); ip_index < std::ssize(ips)) {
+                socket->setDestinationHost(uint32_t{ips[ip_index]});
+                ++ip_index;
+            } else {
+                co_return;
+            }
+        }
+        co_await std::suspend_always();
+        socket->resetError();
+    }
+    _prepareRequest();
+    m_max_frame_size = std::numeric_limits<uint8_t>::max();
+    int64_t bytes_written = 0;
+    const int64_t bytes_to_write = std::ssize(m_request_data);
+    RequestBase::setStatus(Status::Writing);
+    start = std::chrono::time_point_cast< std::chrono::microseconds >(std::chrono::system_clock::now());
+    while (bytes_written < bytes_to_write) {
+        if (m_paused.load(std::memory_order_relaxed)) {
+            co_return;
+        }
+        if (m_canceled.load(std::memory_order_relaxed)) {
+            co_return;
+        }
+        const auto bytes_remain = bytes_to_write - bytes_written;
+        const uint16_t current_frame_size = m_max_frame_size < bytes_remain ? m_max_frame_size : bytes_remain;
+        const auto begin = std::begin(m_request_data) + bytes_written;
+        const auto end = begin + current_frame_size;
+        bytes_written += static_cast< int64_t >(socket->write(begin, end));
+        if (not RequestBase::checkSocketOperationErrorAndTimeOut(*socket, start)) {
+            co_return;
+        }
+        co_await std::suspend_always();
+        socket->resetError();
+    }
+
+    RequestBase::setStatus(Status::Reading);
+    std::vector< std::byte > headers_data;
+    start = std::chrono::time_point_cast< std::chrono::microseconds >(std::chrono::system_clock::now());
+    while (true) {
+        if (m_paused.load(std::memory_order_relaxed)) {
+            co_return;
+        }
+        if (m_canceled.load(std::memory_order_relaxed)) {
+            co_return;
+        }
+        std::array delimiter{'\r', '\n', '\r', '\n'};
+        auto data = socket->readUntil(delimiter);
+        if (not RequestBase::checkSocketOperationErrorAndTimeOut(*socket, start)) {
+            co_return;
+        }
+        if (const auto error = socket->error(); error && socket->error().value() != static_cast< int >(mt::sockets::Error::READ_DONE)) {
+            if (not data.empty()) {
+                std::copy(std::make_move_iterator(std::begin(data)), std::make_move_iterator(std::end(data)), std::back_inserter(headers_data));
+            }
+            co_await std::suspend_always();
+            socket->resetError();
+            continue;
+        }
+        if (not data.empty()) {
+            std::copy(std::make_move_iterator(std::begin(data)), std::make_move_iterator(std::end(data)), std::back_inserter(headers_data));
+        }
+        m_response = std::make_shared< HttpResponse >(m_id, std::move(headers_data));
+        if (m_error) {
+            co_return;
+        }
+        break;
+    }
+    co_await std::suspend_always();
+    socket->resetError();
+    const auto response = std::get< std::shared_ptr< HttpResponse > >(m_response);
+    if (response->status() != http::Status::Ok) {
+        RequestBase::setStatus(Status::Done);
+        co_return;
+    }
+    if (const auto content_length = response->headers().headerValue(mt::network::http::header_names::content_length)) {
+        m_bytes_to_read = std::stoll(content_length.value());
+        if (m_bytes_to_read != 0) {
+            socket->resetError();
+            RequestBase::setStatus(Status::Reading);
+            int64_t bytes_read = 0;
+            start = std::chrono::time_point_cast< std::chrono::microseconds >(std::chrono::system_clock::now());
+            while (bytes_read < m_bytes_to_read) {
+                if (m_paused.load(std::memory_order_relaxed)) {
+                    co_return;
+                }
+                if (m_canceled.load(std::memory_order_relaxed)) {
+                    co_return;
+                }
+                const auto bytes_remain = m_bytes_to_read - bytes_read;
+                const uint16_t current_frame_size = m_max_frame_size < bytes_remain ? m_max_frame_size : bytes_remain;
+                auto data = socket->read(current_frame_size);
+                if (not RequestBase::checkSocketOperationErrorAndTimeOut(*socket, start)) {
+                    co_return;
+                }
+                if (not data.empty()) {
+                    bytes_read += std::ssize(data);
+                    RequestBase::addResponseData(std::move(data));
+                    if (m_error) {
+                        co_return;
+                    }
+                }
+                co_await std::suspend_always();
+                socket->resetError();
+            }
+        } else {
+            RequestBase::setStatus(Status::Done);
+        }
+    } else if (const auto transfer_encoding = response->headers().headerValue(mt::network::http::header_names::transfer_encoding)) {
+        if (transfer_encoding.value().find("chunked") == std::string::npos) {
+            RequestBase::setStatus(Status::Done);
+            co_return;
+        }
+        while (true) {
+            if (m_paused.load(std::memory_order_relaxed)) {
+                co_return;
+            }
+            if (m_canceled.load(std::memory_order_relaxed)) {
+                co_return;
+            }
+            std::array delimiter{'\r', '\n'};
+            auto chunk_size = socket->readUntil(delimiter);
+            if (not RequestBase::checkSocketOperationErrorAndTimeOut(*socket, start)) {
+                co_return;
+            }
+            if (socket->error() && socket->error().value() != static_cast< int32_t >(mt::sockets::Error::READ_DONE)) {
+                socket->resetError();
+                std::this_thread::sleep_for(m_sleeping_interval);
+                continue;
+            }
+            auto pos = std::ranges::find(chunk_size, std::byte{';'});
+            const int64_t bytes_to_read = std::stoll(utility::string(chunk_size.begin(), pos), nullptr, 16);
+            if (bytes_to_read == 0) {
+                break;
+            }
+            socket->resetError();
+            int64_t bytes_read = 0;
+            start = std::chrono::time_point_cast< std::chrono::microseconds >(std::chrono::system_clock::now());
+            while (bytes_read < bytes_to_read) {
+                if (m_paused.load(std::memory_order_relaxed)) {
+                    co_return;
+                }
+                if (m_canceled.load(std::memory_order_relaxed)) {
+                    co_return;
+                }
+                const auto bytes_remain = bytes_to_read - bytes_read;
+                const uint16_t current_frame_size = m_max_frame_size < bytes_remain ? m_max_frame_size : bytes_remain;
+                auto data = socket->read(current_frame_size);
+                if (not RequestBase::checkSocketOperationErrorAndTimeOut(*socket, start)) {
+                    co_return;
+                }
+                if (not data.empty()) {
+                    bytes_read += std::ssize(data);
+                    RequestBase::addResponseData(std::move(data));
+                    if (m_error) {
+                        co_return;
+                    }
+                }
+                co_await std::suspend_always();
+                socket->resetError();
+            }
+            auto redundant_data = socket->read(2);
+            if (not RequestBase::checkSocketOperationErrorAndTimeOut(*socket, start)) {
+                co_return;
+            }
+            co_await std::suspend_always();
+            socket->resetError();
+        }
+    } else {
+        RequestBase::setError(mt::network::makeError(mt::network::HttpErrors::Http_response_size_error));
+        co_return;
+    }
+    RequestBase::setStatus(Status::Done);
+}
+
+template < class Derived > void mt::network::HttpRequest< Derived >::setClientCertificate(std::filesystem::path p_path) {
+    m_client_certificate = std::move(p_path);
+}
+
+template < class Derived > void mt::network::HttpRequest< Derived >::setClientKey(std::filesystem::path p_path) {
+    m_client_key = std::move(p_path);
 }
 
 template < class Derived > void mt::network::HttpRequest< Derived >::addHeader(http::Header header) {

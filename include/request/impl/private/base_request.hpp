@@ -151,8 +151,7 @@ namespace mt::network {
         void setStatus(Status p_status);
         void setError(std::error_code p_error_code);
 
-        [[nodiscard]] auto checkSocketOperationErrorAndTimeOut(const sockets::TcpSocket& p_socket,
-                                                               std::chrono::time_point< std::chrono::system_clock, std::chrono::microseconds > p_time_point) -> bool;
+        [[nodiscard]] auto checkSocketOperationErrorAndTimeOut(const sockets::TcpSocket& p_socket, std::chrono::time_point< std::chrono::system_clock, std::chrono::microseconds > p_time_point) -> bool;
         Url m_url;
         std::filesystem::path m_output_path;
         std::vector< std::byte > m_delimiter;
@@ -179,7 +178,7 @@ namespace mt::network {
 
         std::unique_ptr< std::ofstream > m_output_file;
 
-        const uint16_t m_max_frame_size = std::numeric_limits< uint16_t >::max();
+        uint16_t m_max_frame_size = std::numeric_limits< uint16_t >::max();
 
         Status m_status{Status::Waiting};
         Priority m_priority{Priority::Normal};

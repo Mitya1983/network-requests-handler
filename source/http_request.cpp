@@ -9,7 +9,7 @@ mt::network::GetRequest::GetRequest(Url url) :
     m_request_name = "GET ";
 }
 
-void mt::network::GetRequest::prepareRequest() {
+void mt::network::GetRequest::_prepareRequest() {
     if (not m_request_composed) {
         utility::copy(m_request_name.begin(), m_request_name.end(), m_request_data);
         if (m_url.path().empty() || m_url.path().at(0) != '/') {
@@ -66,7 +66,7 @@ mt::network::PostRequest::PostRequest(Url url) :
 
 void mt::network::PostRequest::setBody(std::string p_body) { m_body = std::move(p_body); }
 
-void mt::network::PostRequest::prepareRequest() {
+void mt::network::PostRequest::_prepareRequest() {
     if (not m_request_composed) {
         if (m_body.empty() and not m_params.empty()) {
             int32_t param_count = 0;
@@ -125,7 +125,7 @@ void mt::network::PutRequest::setBody(std::string p_body) {
     m_body = std::move(p_body);
 }
 
-void mt::network::PutRequest::prepareRequest() {
+void mt::network::PutRequest::_prepareRequest() {
     if (not m_request_composed) {
         if (m_body.empty() and not m_params.empty()) {
             int32_t param_count = 0;

@@ -17,7 +17,7 @@ namespace mt::network {
         ~GetRequest() = default;
 
     private:
-        void prepareRequest();
+        void _prepareRequest();
     };
 
     class PostRequest : public HttpRequest<PostRequest> {
@@ -35,7 +35,7 @@ namespace mt::network {
 
 
     private:
-        void prepareRequest();
+        void _prepareRequest();
 
         std::string m_body;
     };
@@ -54,7 +54,7 @@ namespace mt::network {
         void setBody(std::string p_body);
 
     private:
-        void prepareRequest();
+        void _prepareRequest();
 
         std::string m_body;
     };

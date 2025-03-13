@@ -40,6 +40,8 @@ namespace mt::network::utility {
     [[nodiscard]] auto generateRandomInteger(int64_t p_lower_bound = std::numeric_limits< int64_t >::min(), int64_t p_upper_bound = std::numeric_limits< int64_t >::max())
         -> int64_t;
 
+    [[nodiscard]] auto getLocalDnsIp() -> std::string;
+
     [[nodiscard]] auto equal(auto p_left, auto p_right) -> bool
         requires(std::is_same_v< std::decay_t< decltype(p_left) >, std::byte > or std::is_same_v< std::decay_t< decltype(p_right) >, std::byte >)
                 and (concepts::byte_comparable< std::decay_t< decltype(p_left) > > or concepts::byte_comparable< std::decay_t< decltype(p_right) > >)

@@ -6,3 +6,6 @@
 	path = sockets
 	url = git@github.com:Mitya1983/sockets.git
 	branch = develop
+[submodule "mutex"]
+	path = mutex
+	url = git@github.com:Mitya1983/mutex.git

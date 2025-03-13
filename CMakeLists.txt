@@ -45,7 +45,7 @@ if (${PROJECT_IS_TOP_LEVEL})
     endif ()
 endif ()
 
-execute_process(COMMAND git submodule foreach git pull origin develop
+execute_process(COMMAND git submodule foreach --recursive git pull origin develop
                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_subdirectory(sockets)
@@ -53,6 +53,7 @@ add_subdirectory(sockets)
 include_directories(
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}/resumable-coroutine
+        ${CMAKE_CURRENT_SOURCE_DIR}/mutex
         ${CMAKE_CURRENT_SOURCE_DIR}/sockets
         )
 
@@ -80,6 +81,12 @@ file(GLOB RES_CORO_INC_FILES CONFIGURE_DEPENDS
      )
 file(GLOB RES_CORO_SRC_FILES CONFIGURE_DEPENDS
      resumable-coroutine/source/*.cpp
+     )
+file(GLOB MUTEX_INC_FILES CONFIGURE_DEPENDS
+     mutex/include/*.hpp
+     )
+file(GLOB MUTEX_SRC_FILES CONFIGURE_DEPENDS
+     mutex/source/*.cpp
      )
 
 set(LIB_VERSION 2.0.0)
@@ -141,6 +148,8 @@ target_sources(
         PRIVATE ${PRIVATE_INC_FILES}
         PRIVATE ${RES_CORO_INC_FILES}
         PRIVATE ${RES_CORO_SRC_FILES}
+        PRIVATE ${MUTEX_INC_FILES}
+        PRIVATE ${MUTEX_SRC_FILES}
         PUBLIC ${INC_FILES}
         )
 

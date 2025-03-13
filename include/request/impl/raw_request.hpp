@@ -3,10 +3,13 @@
 
 #include "include/request/impl/private/base_request.hpp"
 
+#include "resumable-coroutine/include/resumable_coroutine.hpp"
 
 namespace mt::network {
 
     class RawRequest final : public RequestBase {
+        friend class AsyncRequestHandler;
+
     public:
         explicit RawRequest(Url p_url);
 
@@ -20,9 +23,17 @@ namespace mt::network {
 
         auto requestData() -> const std::vector< std::byte >&;
 
-        void processRequest ();
-    };
+        void setClientCertificate(std::filesystem::path p_path);
+        void setClientKey(std::filesystem::path p_path);
 
+        void processRequest();
+
+    private:
+        auto _asyncProcessRequest() -> mt::ResumableCoroutine;
+
+        std::filesystem::path m_client_certificate;
+        std::filesystem::path m_client_key;
+    };
 }  // namespace mt::network
 
 

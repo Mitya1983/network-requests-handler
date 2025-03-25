@@ -8,6 +8,7 @@ namespace mt::network {
 
     class ResponseBase {
         friend class RequestBase;
+
     public:
         ResponseBase() = delete;
         ResponseBase(const ResponseBase& p_other) = delete;
@@ -16,6 +17,8 @@ namespace mt::network {
         ResponseBase& operator=(ResponseBase&& p_other) noexcept = default;
         void* operator new(size_t) = delete;
         ~ResponseBase() = default;
+
+        [[nodiscard]] auto responseData() const -> const std::vector< std::byte >& { return m_response_data; }
 
     protected:
         explicit ResponseBase(const uint64_t p_id) :

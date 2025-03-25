@@ -9,7 +9,7 @@
 #include <list>
 
 namespace mt::network {
-    void handle_request(Request p_request, bool p_queued = true, bool p_block = false);
+    void handle_request(Request p_request, bool p_block = false);
 
     class AsyncRequestHandler final {
 

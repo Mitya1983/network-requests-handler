@@ -7,11 +7,7 @@
 #include <mutex>
 #include <iostream>
 
-void mt::network::handle_request(Request p_request, const bool p_queued, const bool p_block) {
-    if (not p_queued) {
-        handler::thread::handle_request(std::move(p_request), p_block);
-    }
-}
+void mt::network::handle_request(Request p_request, const bool p_block) { handler::thread::handle_request(std::move(p_request), p_block); }
 
 mt::network::AsyncRequestHandler::~AsyncRequestHandler() {
     m_working.store(false);

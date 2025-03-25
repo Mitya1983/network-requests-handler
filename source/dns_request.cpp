@@ -101,6 +101,7 @@ void mt::network::DnsRequest::processRequest() {
             return;
         }
     }
+    throw std::runtime_error("Host not found");
 }
 
 auto mt::network::DnsRequest::error() const -> const std::error_code& { return m_error; }

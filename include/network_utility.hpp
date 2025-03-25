@@ -32,6 +32,7 @@ namespace mt::network::utility {
     [[nodiscard]] auto decodeUrl(const std::string& p_string_to_encode) -> std::string;
     [[nodiscard]] auto string(std::vector< std::byte >::const_iterator begin, std::vector< std::byte >::const_iterator end) -> std::string;
     [[nodiscard]] auto string_view(std::vector< std::byte >& p_data) -> std::string_view;
+    [[nodiscard]] auto string_view(const std::vector< std::byte >& p_data) -> std::string_view;
     [[nodiscard]] auto capitalizeHttpHeader(const std::string& source) -> std::string;
     [[nodiscard]] auto toNetworkByteOrder(uint16_t p_value) -> uint16_t;
     [[nodiscard]] auto toNetworkByteOrder(uint32_t p_value) -> uint16_t;

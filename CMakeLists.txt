@@ -52,9 +52,6 @@ add_subdirectory(sockets)
 
 include_directories(
         ${CMAKE_CURRENT_SOURCE_DIR}
-        ${CMAKE_CURRENT_SOURCE_DIR}/resumable-coroutine
-        ${CMAKE_CURRENT_SOURCE_DIR}/mutex
-        ${CMAKE_CURRENT_SOURCE_DIR}/sockets
         )
 
 file(GLOB INC_FILES CONFIGURE_DEPENDS

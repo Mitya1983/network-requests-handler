@@ -7,9 +7,10 @@
 #endif
 
 #include "include/network_utility.hpp"
-#include "include/udp_socket.hpp"
 #include "include/request/impl/dns_request.hpp"
 #include "include/response/impl/dns_response.hpp"
+
+#include "sockets/include/udp_socket.hpp"
 
 #include <unordered_map>
 #include <regex>

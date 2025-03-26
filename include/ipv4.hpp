@@ -1,7 +1,8 @@
 // Created by Mitia Tristan on 20.12.24.
 
-#ifndef IP_HPP
-#define IP_HPP
+#ifndef NETWORK_REQUEST_HANDLER_INCLUDE_IPV4_HPP
+#define NETWORK_REQUEST_HANDLER_INCLUDE_IPV4_HPP
+
 #include <cstdint>
 #include <string>
 #include <array>
@@ -24,4 +25,4 @@ namespace mt::network {
         std::array<std::byte, 4> m_ip{};
     };
 }
-#endif //IP_HPP
+#endif //NETWORK_REQUEST_HANDLER_INCLUDE_IPV4_HPP

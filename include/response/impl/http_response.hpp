@@ -1,11 +1,12 @@
-#ifndef INCLUDE_RESPONSE_IMPL_HTTP_RESPONSE_HPP
-#define INCLUDE_RESPONSE_IMPL_HTTP_RESPONSE_HPP
+#ifndef NETWORK_REQUEST_HANDLER_INCLUDE_RESPONSE_IMPL_HTTP_RESPONSE_HPP
+#define NETWORK_REQUEST_HANDLER_INCLUDE_RESPONSE_IMPL_HTTP_RESPONSE_HPP
 
 #include "include/response/impl/private/base_response.hpp"
 
-#include "include/http/http_header.hpp"
-#include "include/http/http_status_codes.hpp"
+#include "include/http/header.hpp"
+#include "include/http/status_codes.hpp"
 
+#include <system_error>
 namespace mt::network {
 
     class HttpResponse final : public ResponseBase {
@@ -36,4 +37,4 @@ namespace mt::network {
 
 }  // namespace mt::network
 
-#endif  // INCLUDE_RESPONSE_IMPL_HTTP_RESPONSE_HPP
+#endif  // NETWORK_REQUEST_HANDLER_INCLUDE_RESPONSE_IMPL_HTTP_RESPONSE_HPP

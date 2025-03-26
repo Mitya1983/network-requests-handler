@@ -6,6 +6,7 @@
 #include <random>
 #include <unordered_map>
 #include <fstream>
+#include <array>
 
 namespace {
 

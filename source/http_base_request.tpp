@@ -3,8 +3,9 @@
 #ifndef SOURCE_HTTP_BASE_REQUEST_TPP
 #define SOURCE_HTTP_BASE_REQUEST_TPP
 
+#include "include/network_error.hpp"
 #include "include/network_utility.hpp"
-#include "include/http/http_header_names.hpp"
+#include "include/http/header_names.hpp"
 
 #include "sockets/include/tcp_socket.hpp"
 #include "sockets/include/socket_error.hpp"

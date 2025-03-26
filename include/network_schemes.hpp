@@ -1,9 +1,8 @@
-#ifndef NETWORK_SCHEMES_HPP
-#define NETWORK_SCHEMES_HPP
+#ifndef NETWORK_REQUEST_HANDLER_INCLUDE_NETWORK_SCHEMES_HPP
+#define NETWORK_REQUEST_HANDLER_INCLUDE_NETWORK_SCHEMES_HPP
 
 #include <string>
 #include <cstdint>
-
 
 namespace mt::network::schemes {
 
@@ -17,4 +16,4 @@ namespace mt::network::schemes {
 
 }  // namespace tristan::network::schemes
 
-#endif  //NETWORK_SCHEMES_HPP
+#endif  //NETWORK_REQUEST_HANDLER_INCLUDE_NETWORK_SCHEMES_HPP

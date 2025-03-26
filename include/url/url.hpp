@@ -2,11 +2,10 @@
 #define INCLUDE_URL_HPP
 
 #include "include/param.hpp"
-
 #include "include/ipv4.hpp"
+
 #include <string>
 #include <system_error>
-#include <vector>
 
 
 namespace mt::network {

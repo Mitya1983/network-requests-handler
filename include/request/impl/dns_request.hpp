@@ -1,12 +1,12 @@
 // Created by Mitia Tristan on 02.02.25.
 
-#ifndef INCLUDE_REQUEST_IMPL_DNS_REQUEST_HPP
-#define INCLUDE_REQUEST_IMPL_DNS_REQUEST_HPP
-#include "include/ipv4.hpp"
+#ifndef NETWORK_REQUEST_HANDLER_INCLUDE_REQUEST_IMPL_DNS_REQUEST_HPP
+#define NETWORK_REQUEST_HANDLER_INCLUDE_REQUEST_IMPL_DNS_REQUEST_HPP
 
 #include <string>
 #include <vector>
 #include <memory>
+#include <array>
 
 namespace mt::network {
     class DnsResponse;
@@ -34,4 +34,4 @@ namespace mt::network {
     };
 }  // namespace mt::network
 
-#endif  //INCLUDE_REQUEST_IMPL_DNS_REQUEST_HPP
+#endif  //NETWORK_REQUEST_HANDLER_INCLUDE_REQUEST_IMPL_DNS_REQUEST_HPP

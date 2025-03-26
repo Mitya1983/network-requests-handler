@@ -1,5 +1,5 @@
 #include "include/request/impl/http_request.hpp"
-#include "include/http/http_header_names.hpp"
+#include "include/http/header_names.hpp"
 #include "include/network_utility.hpp"
 
 #include <thread>

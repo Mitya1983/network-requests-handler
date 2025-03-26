@@ -1,20 +1,19 @@
 // Created by Mitia Tristan on 13.01.25.
 
-#ifndef INCLUDE_REQUEST_IMPL_PRIVATE_HTTP_BASE_REQUEST_HPP
-#define INCLUDE_REQUEST_IMPL_PRIVATE_HTTP_BASE_REQUEST_HPP
+#ifndef NETWORK_REQUEST_HANDLER_INCLUDE_REQUEST_IMPL_PRIVATE_HTTP_BASE_REQUEST_HPP
+#define NETWORK_REQUEST_HANDLER_INCLUDE_REQUEST_IMPL_PRIVATE_HTTP_BASE_REQUEST_HPP
 
 #include "include/request/impl/private/base_request.hpp"
 
 #include "include/param.hpp"
-#include "include/http/http_header.hpp"
+#include "include/http/header.hpp"
 
 #include "resumable-coroutine/include/resumable_coroutine.hpp"
-
-
 
 namespace mt::network {
     template < class Derived > class HttpRequest : public RequestBase {
         friend class AsyncRequestHandler;
+
     public:
         HttpRequest(const HttpRequest& p_other) = delete;
         HttpRequest(HttpRequest&& p_other) noexcept = delete;
@@ -36,6 +35,7 @@ namespace mt::network {
         explicit HttpRequest(Url p_url);
 
         void _prepareRequest() { static_cast< Derived* >(this)->_prepareRequest(); }
+
         auto _asyncProcessRequest() -> mt::ResumableCoroutine;
 
         std::filesystem::path m_client_certificate;
@@ -49,4 +49,4 @@ namespace mt::network {
 
 #include "source/http_base_request.tpp"
 
-#endif  //INCLUDE_REQUEST_IMPL_PRIVATE_HTTP_BASE_REQUEST_HPP
+#endif  //NETWORK_REQUEST_HANDLER_INCLUDE_REQUEST_IMPL_PRIVATE_HTTP_BASE_REQUEST_HPP

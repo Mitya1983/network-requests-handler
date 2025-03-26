@@ -1,5 +1,5 @@
-#ifndef HTTP_HEADER_NAMES_HPP
-#define HTTP_HEADER_NAMES_HPP
+#ifndef NETWORK_REQUEST_HANDLER_INCLUDE_HTTP_HEADER_NAMES_HPP
+#define NETWORK_REQUEST_HANDLER_INCLUDE_HTTP_HEADER_NAMES_HPP
 
 #include <string>
 
@@ -111,4 +111,4 @@ namespace mt::network::http::header_names {
 
 } // namespace tristan::network::http::header_names
 
-#endif // HTTP_HEADER_NAMES_HPP
+#endif // NETWORK_REQUEST_HANDLER_INCLUDE_HTTP_HEADER_NAMES_HPP

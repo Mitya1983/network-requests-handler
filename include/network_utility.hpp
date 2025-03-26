@@ -1,12 +1,11 @@
-#ifndef NETWORK_UTILITY_HPP
-#define NETWORK_UTILITY_HPP
+#ifndef NETWORK_REQUEST_HANDLER_INCLUDE_NETWORK_UTILITY_HPP
+#define NETWORK_REQUEST_HANDLER_INCLUDE_NETWORK_UTILITY_HPP
 
 #include "include/concepts.hpp"
 
 #include <filesystem>
 #include <vector>
 #include <algorithm>
-#include <array>
 
 namespace mt::network::utility {
     /**
@@ -89,4 +88,4 @@ namespace mt::network::utility {
     }
 }  // namespace mt::network::utility
 
-#endif  //NETWORK_UTILITY_HPP
+#endif  //NETWORK_REQUEST_HANDLER_INCLUDE_NETWORK_UTILITY_HPP

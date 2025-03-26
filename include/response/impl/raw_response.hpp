@@ -1,6 +1,6 @@
 // Created by Mitia Tristan on 07.01.25.
-#ifndef INCLUDE_RESPONSE_IMPL_RAW_RESPONSE_HPP
-#define INCLUDE_RESPONSE_IMPL_RAW_RESPONSE_HPP
+#ifndef NETWORK_REQUEST_HANDLER_INCLUDE_RESPONSE_IMPL_RAW_RESPONSE_HPP
+#define NETWORK_REQUEST_HANDLER_INCLUDE_RESPONSE_IMPL_RAW_RESPONSE_HPP
 
 #include "include/response/impl/private/base_response.hpp"
 
@@ -21,4 +21,4 @@ namespace mt::network {
     };
 }  // namespace mt::network
 
-#endif  // INCLUDE_RESPONSE_IMPL_RAW_RESPONSE_HPP
+#endif  // NETWORK_REQUEST_HANDLER_INCLUDE_RESPONSE_IMPL_RAW_RESPONSE_HPP

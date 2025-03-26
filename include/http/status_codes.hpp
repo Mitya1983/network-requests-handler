@@ -1,14 +1,10 @@
-#ifndef INCLUDE_HTTP_HTTP_STATUS_CODES_HPP
-#define INCLUDE_HTTP_HTTP_STATUS_CODES_HPP
+#ifndef NETWORK_REQUEST_HANDLER_INCLUDE_HTTP_HTTP_STATUS_CODES_HPP
+#define NETWORK_REQUEST_HANDLER_INCLUDE_HTTP_HTTP_STATUS_CODES_HPP
 
 #include <cstdint>
 #include <string>
 
 namespace mt::network::http {
-    /**
-     * \enum Status
-     * \brief Stores values for http error codes.
-     */
     enum class Status : uint16_t{
         ///The server has received the request headers and the client should proceed to send the request body.
         Continue = 100,
@@ -138,4 +134,4 @@ namespace mt::network::http {
 
     auto getHttpStatusDetails(http::Status status) -> const std::string&;
 } // namespace tristan::network
-#endif // INCLUDE_HTTP_HTTP_STATUS_CODES_HPP
+#endif // NETWORK_REQUEST_HANDLER_INCLUDE_HTTP_HTTP_STATUS_CODES_HPP

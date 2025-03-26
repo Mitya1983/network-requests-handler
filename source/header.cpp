@@ -1,5 +1,6 @@
-#include "include/http/http_header.hpp"
+#include "include/http/header.hpp"
 
+#include "include/network_error.hpp"
 #include "include/network_utility.hpp"
 
 #include <algorithm>

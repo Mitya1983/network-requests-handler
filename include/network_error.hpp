@@ -1,10 +1,8 @@
-#ifndef NETWORK_ERROR_HPP
-#define NETWORK_ERROR_HPP
+#ifndef NETWORK_REQUEST_HANDLER_INCLUDE_NETWORK_ERROR_HPP
+#define NETWORK_REQUEST_HANDLER_INCLUDE_NETWORK_ERROR_HPP
 
 #include <system_error>
 #include <cstdint>
-#include <variant>
-
 
 namespace mt::network {
 
@@ -90,4 +88,4 @@ namespace mt::network {
 
 }  // namespace mt::network
 
-#endif  // NETWORK_ERROR_HPP
+#endif  // NETWORK_REQUEST_HANDLER_INCLUDE_NETWORK_ERROR_HPP

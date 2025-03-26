@@ -1,15 +1,9 @@
-#ifndef HTTP_HEADER_HPP
-#define HTTP_HEADER_HPP
-
-#include "include/network_error.hpp"
-
-#include "include/concepts.hpp"
+#ifndef NETWORK_REQUEST_HANDLER_INCLUDE_HTTP_HEADER_HPP
+#define NETWORK_REQUEST_HANDLER_INCLUDE_HTTP_HEADER_HPP
 
 #include <string>
 #include <vector>
 #include <optional>
-#include <iterator>
-#include <ranges>
 
 namespace mt::network::http {
 
@@ -49,4 +43,4 @@ namespace mt::network::http {
     };
 }  // namespace mt::network::http
 
-#endif  // HTTP_HEADER_HPP
+#endif  // NETWORK_REQUEST_HANDLER_INCLUDE_HTTP_HEADER_HPP

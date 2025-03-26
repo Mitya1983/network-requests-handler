@@ -1,11 +1,13 @@
 // Created by Mitia Tristan on 26.01.25.
 
-#ifndef INCLUDE_HANDLER_REQUEST_HANDLER_HPP
-#define INCLUDE_HANDLER_REQUEST_HANDLER_HPP
+#ifndef NETWORK_REQUEST_HANDLER_INCLUDE_HANDLER_REQUEST_HANDLER_HPP
+#define NETWORK_REQUEST_HANDLER_INCLUDE_HANDLER_REQUEST_HANDLER_HPP
 
 #include "include/request/requests.hpp"
+
 #include "resumable-coroutine/include/resumable_coroutine.hpp"
 #include "mutex/include/mutex.hpp"
+
 #include <list>
 
 namespace mt::network {
@@ -43,4 +45,4 @@ namespace mt::network {
     };
 }  // namespace mt::network
 
-#endif  //INCLUDE_HANDLER_REQUEST_HANDLER_HPP
+#endif  //NETWORK_REQUEST_HANDLER_INCLUDE_HANDLER_REQUEST_HANDLER_HPP

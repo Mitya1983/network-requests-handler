@@ -1,7 +1,5 @@
-#ifndef HTTP_PARAM_HPP
-#define HTTP_PARAM_HPP
-
-#include "concepts.hpp"
+#ifndef NETWORK_REQUEST_HANDLER_INCLUDE_PARAM_HPP
+#define NETWORK_REQUEST_HANDLER_INCLUDE_PARAM_HPP
 
 #include <string>
 #include <vector>
@@ -46,4 +44,4 @@ namespace mt::network {
 
 }  // namespace mt::network::http
 
-#endif  //HTTP_PARAM_HPP
+#endif  //NETWORK_REQUEST_HANDLER_INCLUDE_PARAM_HPP

@@ -1,16 +1,14 @@
-#ifndef INCLUDE_REQUEST_IMPL_PRIVATE_REQUEST_BASE_HPP
-#define INCLUDE_REQUEST_IMPL_PRIVATE_REQUEST_BASE_HPP
+#ifndef NETWORK_REQUEST_HANDLER_INCLUDE_REQUEST_IMPL_PRIVATE_REQUEST_BASE_HPP
+#define NETWORK_REQUEST_HANDLER_INCLUDE_REQUEST_IMPL_PRIVATE_REQUEST_BASE_HPP
 
 #include "include/response/responses.hpp"
 
 #include "include/url/url.hpp"
 
 #include <filesystem>
-#include <vector>
 #include <functional>
 #include <atomic>
 #include <fstream>
-#include <chrono>
 
 namespace mt::sockets {
     class TcpSocket;
@@ -640,4 +638,4 @@ namespace mt::network {
     }
 }  // namespace mt::network
 
-#endif  // INCLUDE_REQUEST_IMPL_PRIVATE_REQUEST_BASE_HPP
+#endif  // NETWORK_REQUEST_HANDLER_INCLUDE_REQUEST_IMPL_PRIVATE_REQUEST_BASE_HPP

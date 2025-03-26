@@ -1,7 +1,7 @@
 // Created by Mitia Tristan on 03.02.25.
 
-#ifndef INCLUDE_CONCEPTS_HPP
-#define INCLUDE_CONCEPTS_HPP
+#ifndef NETWORK_REQUEST_HANDLER_INCLUDE_CONCEPTS_HPP
+#define NETWORK_REQUEST_HANDLER_INCLUDE_CONCEPTS_HPP
 #include <type_traits>
 
 namespace mt::network::concepts {
@@ -15,4 +15,4 @@ namespace mt::network::concepts {
     concept parse_compatible = convertible_to_char< T > or char_is_constructable< T >;
 }  // namespace mt::network::concepts
 
-#endif  //INCLUDE_CONCEPTS_HPP
+#endif  //NETWORK_REQUEST_HANDLER_INCLUDE_CONCEPTS_HPP

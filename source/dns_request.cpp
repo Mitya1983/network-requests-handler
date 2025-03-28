@@ -6,6 +6,7 @@
 #include "include/response/impl/dns_response.hpp"
 
 #include "sockets/include/udp_socket.hpp"
+#include "utility/include/utility.hpp"
 
 namespace {
     struct DNSHeader {
@@ -43,7 +44,7 @@ mt::network::DnsRequest::DnsRequest(const std::string& p_host_name) {
         m_dns_servers[0] = std::move(default_dns_ip);
     }
     DNSHeader dns_header{};
-    dns_header.id = m_id = mt::network::utility::generateRandomInteger(1, std::numeric_limits< uint16_t >::max());
+    dns_header.id = m_id = mt::utility::generateRandomInteger(1, std::numeric_limits< uint16_t >::max());
     dns_header.flags = mt::network::utility::toNetworkByteOrder(uint16_t{0x0100});;
     dns_header.questions_count = mt::network::utility::toNetworkByteOrder(uint16_t{0x0001});
     dns_header.answers_count = 0;
@@ -84,7 +85,7 @@ void mt::network::DnsRequest::processRequest() {
         socket.setDestinationHost(uint32_t{Ipv4{dns_server}});
         socket.setDestinationPort(utility::toNetworkByteOrder(uint16_t{53}));
         socket.setLocalHost(uint32_t{Ipv4{"0.0.0.0"}});
-        socket.setLocalPort(utility::toNetworkByteOrder(static_cast<uint16_t>(utility::generateRandomInteger(49152, std::numeric_limits<uint16_t>::max()))));
+        socket.setLocalPort(utility::toNetworkByteOrder(static_cast<uint16_t>(mt::utility::generateRandomInteger(49152, std::numeric_limits<uint16_t>::max()))));
         socket.bind();
         socket.write(m_request_data);
         if (const auto error = socket.error(); error) {

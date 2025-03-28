@@ -1,7 +1,8 @@
 #include "include/http/header.hpp"
 
 #include "include/network_error.hpp"
-#include "include/network_utility.hpp"
+
+#include "utility/include/utility.hpp"
 
 #include <algorithm>
 
@@ -47,7 +48,7 @@ mt::network::http::Header::Header(std::string_view::const_iterator& p_begin, con
     }
 }
 
-mt::network::http::HttpHeaders::HttpHeaders(std::string_view p_data) {
+mt::network::http::HttpHeaders::HttpHeaders(const std::string_view p_data) {
     auto iter = p_data.begin();
     while (iter != p_data.end()) {
         m_headers.emplace_back(iter, p_data.end());
@@ -58,7 +59,7 @@ void mt::network::http::HttpHeaders::addHeader(Header p_header) { m_headers.empl
 
 auto mt::network::http::HttpHeaders::headerValue(const std::string& p_header_name) const -> std::optional< std::string > {
     const auto found = std::ranges::find_if(m_headers, [p_header_name](const Header& header) -> bool {
-        return header.name == p_header_name || header.name == mt::network::utility::capitalizeHttpHeader(p_header_name);
+        return header.name == p_header_name || header.name == mt::utility::capitalizeByWord(p_header_name, '-');
     });
     if (found == m_headers.cend()) {
         return std::nullopt;

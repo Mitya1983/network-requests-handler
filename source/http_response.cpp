@@ -1,6 +1,7 @@
 #include "include/response/impl/http_response.hpp"
 #include "include/network_error.hpp"
-#include "include/network_utility.hpp"
+
+#include "utility/include/utility.hpp"
 
 mt::network::HttpResponse::HttpResponse(const uint64_t p_id, std::vector< std::byte > p_headers_data) :
     ResponseBase(p_id) {

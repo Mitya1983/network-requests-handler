@@ -9,6 +9,7 @@
 
 #include "sockets/include/tcp_socket.hpp"
 #include "sockets/include/socket_error.hpp"
+#include "utility/include/utility.hpp"
 
 #include <thread>
 template < class Derived > void ::mt::network::HttpRequest< Derived >::processRequest() {
@@ -185,7 +186,7 @@ template < class Derived > void ::mt::network::HttpRequest< Derived >::processRe
                 continue;
             }
             auto pos = std::ranges::find(chunk_size, std::byte{';'});
-            const int64_t bytes_to_read = std::stoll(utility::string(chunk_size.begin(), pos), nullptr, 16);
+            const int64_t bytes_to_read = std::stoll(mt::utility::string(chunk_size.begin(), pos), nullptr, 16);
             if (bytes_to_read == 0) {
                 break;
             }
@@ -407,7 +408,7 @@ template < class Derived > auto mt::network::HttpRequest< Derived >::_asyncProce
                 continue;
             }
             auto pos = std::ranges::find(chunk_size, std::byte{';'});
-            const int64_t bytes_to_read = std::stoll(utility::string(chunk_size.begin(), pos), nullptr, 16);
+            const int64_t bytes_to_read = std::stoll(mt::utility::string(chunk_size.begin(), pos), nullptr, 16);
             if (bytes_to_read == 0) {
                 break;
             }

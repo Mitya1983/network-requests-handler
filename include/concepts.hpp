@@ -6,7 +6,7 @@
 
 namespace mt::network::concepts {
     template < typename Type >
-    concept byte_comparable = std::is_integral_v< Type >;
+    concept byte_comparable = std::is_integral_v< Type > and sizeof(Type) == 1;
     template < typename T >
     concept convertible_to_char = requires { static_cast< char >(std::declval< T >()); };
     template < typename T >

@@ -4,6 +4,7 @@
 
 #include "include/network_error.hpp"
 #include "include/network_utility.hpp"
+#include "utility/include/utility.hpp"
 
 namespace {
     struct DNSHeader {
@@ -32,12 +33,12 @@ namespace {
 
     struct Question {
         explicit Question(std::vector< std::byte >::iterator& iter) {
-            while (not mt::network::utility::equal(*iter, 0)) {
+            while (*iter != uint8_t{0}) {
                 const auto size = static_cast< uint8_t >(*iter);
                 ++iter;
-                name += mt::network::utility::string(iter, iter + size);
+                name += mt::utility::string(iter, iter + size);
                 iter += size;
-                if (not mt::network::utility::equal(*iter, 0)) {
+                if (*iter != uint8_t{0}) {
                     name += '.';
                 }
             }
@@ -69,8 +70,8 @@ mt::network::DnsResponse::DnsResponse(std::vector< std::byte > data, const uint1
         m_error = makeError(DnsErrors::Response_id_missmatch);
         return;
     }
-    if (const auto error = static_cast< std::byte >(dns_header.return_code & uint16_t{0x000F}); not utility::equal(error, 0)) {
-        if (utility::less(error, 9)) {
+    if (const auto error = static_cast< std::byte >(dns_header.return_code & uint16_t{0x000F}); error != uint8_t{0}) {
+        if (error < uint8_t{9}) {
             m_error = makeError(static_cast< DnsErrors >(error));
         } else {
             m_error = makeError(DnsErrors::Unknown_error);
@@ -79,7 +80,7 @@ mt::network::DnsResponse::DnsResponse(std::vector< std::byte > data, const uint1
     }
     Question question{iter};
     while (iter != m_raw_data.end()) {
-        if (utility::equal(*iter, 192)) {
+        if (*iter == uint8_t{192}) {
             ++iter;
             if (auto name = nameFromPointer(m_raw_data.begin() + static_cast< int8_t >(*iter), m_raw_data); m_aliases.empty() or name != m_aliases.back()) {
                 m_aliases.push_back(std::move(name));
@@ -107,7 +108,7 @@ mt::network::DnsResponse::DnsResponse(std::vector< std::byte > data, const uint1
                 auto end = iter + data_length;
                 std::string alias;
                 while (iter != end) {
-                    if (utility::equal(*iter, 192)) {
+                    if (*iter == uint8_t{192}) {
                         ++iter;
                         alias += nameFromPointer(m_raw_data.begin() + static_cast< int8_t >(*iter), m_raw_data);
                         ++iter;
@@ -115,9 +116,9 @@ mt::network::DnsResponse::DnsResponse(std::vector< std::byte > data, const uint1
                     }
                     const auto length = static_cast< uint8_t >(*iter);
                     ++iter;
-                    alias += utility::string(iter, iter + length);
+                    alias += mt::utility::string(iter, iter + length);
                     iter += length;
-                    if (not utility::equal(*iter, 0)) {
+                    if (*iter != uint8_t{0}) {
                         alias += '.';
                     } else {
                         ++iter;
@@ -151,8 +152,8 @@ auto mt::network::DnsResponse::resolved_ips() -> std::vector< Ipv4 >& { return m
 namespace {
     std::string nameFromPointer(std::vector< std::byte >::iterator iter, std::vector< std::byte >& data) {  //NOLINT
         std::string result;
-        while (not mt::network::utility::equal(*iter, 0)) {
-            if (mt::network::utility::equal(*iter, 192)) {
+        while (*iter != uint8_t{0}) {
+            if (*iter == uint8_t{192}) {
                 ++iter;
                 result += nameFromPointer(data.begin() + static_cast< int8_t >(*iter), data);
                 // ++iter;
@@ -160,9 +161,9 @@ namespace {
             }
             const auto length = static_cast< uint8_t >(*iter);
             ++iter;
-            result += mt::network::utility::string(iter, iter + length);
+            result += mt::utility::string(iter, iter + length);
             iter += length;
-            if (not mt::network::utility::equal(*iter, 0)) {
+            if (*iter != uint8_t{0}) {
                 result += '.';
             }
         }

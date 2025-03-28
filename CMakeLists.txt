@@ -45,13 +45,87 @@ if (${PROJECT_IS_TOP_LEVEL})
     endif ()
 endif ()
 
-execute_process(COMMAND git submodule foreach --recursive git pull origin develop
-                WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+if (${PROJECT_IS_TOP_LEVEL})
 
-add_subdirectory(sockets)
+    set(DEPS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/deps)
+    if (NOT EXISTS ${DEPS_DIR})
+        file(MAKE_DIRECTORY ${DEPS_DIR})
+    endif ()
+
+    set(OPENSSL_DIR ${DEPS_DIR}/openssl)
+    set(SOCKETS_DIR ${DEPS_DIR}/sockets)
+    set(MUTEX_DIR ${DEPS_DIR}/mutex)
+    set(RESUMABLE_COROUTINE_DIR ${DEPS_DIR}/resumable-coroutine)
+    set(UTILITY_DIR ${DEPS_DIR}/utility)
+
+    if (NOT EXISTS ${OPENSSL_DIR})
+        message(STATUS "Cloning openssl")
+        execute_process(
+                COMMAND git clone --branch main git@github.com:Mitya1983/openssl.git
+                WORKING_DIRECTORY ${DEPS_DIR})
+    else ()
+        message(STATUS "Updating openssl")
+        execute_process(
+                COMMAND git pull
+                WORKING_DIRECTORY ${OPENSSL_DIR})
+    endif ()
+    if (NOT EXISTS ${SOCKETS_DIR})
+        message(STATUS "Cloning sockets")
+        execute_process(
+                COMMAND git clone --branch develop git@github.com:Mitya1983/sockets.git
+                WORKING_DIRECTORY ${DEPS_DIR})
+    else ()
+        message(STATUS "Updating sockets")
+        execute_process(
+                COMMAND git pull
+                WORKING_DIRECTORY ${SOCKETS_DIR})
+    endif ()
+    if (NOT EXISTS ${MUTEX_DIR})
+        message(STATUS "Cloning mutex")
+        execute_process(
+                COMMAND git clone --branch develop git@github.com:Mitya1983/mutex.git
+                WORKING_DIRECTORY ${DEPS_DIR})
+    else ()
+        message(STATUS "Updating mutex")
+        execute_process(
+                COMMAND git pull
+                WORKING_DIRECTORY ${MUTEX_DIR})
+    endif ()
+    if (NOT EXISTS ${RESUMABLE_COROUTINE_DIR})
+        message(STATUS "Cloning resumable-coroutine")
+        execute_process(
+                COMMAND git clone --branch develop git@github.com:Mitya1983/resumable-coroutine.git
+                WORKING_DIRECTORY ${DEPS_DIR})
+    else ()
+        message(STATUS "Updating resumable-coroutine")
+        execute_process(
+                COMMAND git pull
+                WORKING_DIRECTORY ${RESUMABLE_COROUTINE_DIR})
+    endif ()
+    if (NOT EXISTS ${UTILITY_DIR})
+        message(STATUS "Cloning utility")
+        execute_process(
+                COMMAND git clone --branch develop git@github.com:Mitya1983/utility.git
+                WORKING_DIRECTORY ${DEPS_DIR})
+    else ()
+        message(STATUS "Updating utility")
+        execute_process(
+                COMMAND git pull
+                WORKING_DIRECTORY ${UTILITY_DIR})
+    endif ()
+
+    add_subdirectory(${OPENSSL_DIR})
+    add_subdirectory(${SOCKETS_DIR})
+    add_subdirectory(${MUTEX_DIR})
+    add_subdirectory(${RESUMABLE_COROUTINE_DIR})
+    add_subdirectory(${UTILITY_DIR})
+endif ()
+
 
 include_directories(
         ${CMAKE_CURRENT_SOURCE_DIR}
+        ${OPENSSL_INCLUDE_DIR}
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps
         )
 
 file(GLOB INC_FILES CONFIGURE_DEPENDS
@@ -73,18 +147,7 @@ file(GLOB PRIVATE_INC_FILES CONFIGURE_DEPENDS
 file(GLOB SRC_FILES CONFIGURE_DEPENDS
      source/*.cpp
      )
-file(GLOB RES_CORO_INC_FILES CONFIGURE_DEPENDS
-     resumable-coroutine/include/*.hpp
-     )
-file(GLOB RES_CORO_SRC_FILES CONFIGURE_DEPENDS
-     resumable-coroutine/source/*.cpp
-     )
-file(GLOB MUTEX_INC_FILES CONFIGURE_DEPENDS
-     mutex/include/*.hpp
-     )
-file(GLOB MUTEX_SRC_FILES CONFIGURE_DEPENDS
-     mutex/source/*.cpp
-     )
+
 
 set(LIB_VERSION 2.0.0)
 
@@ -107,7 +170,7 @@ if (NOT ${PROJECT_IS_TOP_LEVEL})
     if (CMAKE_BUILD_TYPE STREQUAL "Debug")
         add_compile_definitions(MT_DEBUG)
     endif ()
-    set(NETWORK_REQUEST_HANDLER_LIBRARY_DIR ${LIBRARY_INSTALL_DIR} PARENT_SCOPE)
+    set(NETWORK_REQUEST_HANDLER_LIB_DIR ${LIBRARY_INSTALL_DIR} PARENT_SCOPE)
     set(NETWORK_REQUEST_HANDLER_INCLUDE_DIR ${INCLUDE_INSTALL_DIR} PARENT_SCOPE)
 endif ()
 
@@ -143,21 +206,23 @@ target_sources(
         ${PROJECT_NAME}
         PRIVATE ${SRC_FILES}
         PRIVATE ${PRIVATE_INC_FILES}
-        PRIVATE ${RES_CORO_INC_FILES}
-        PRIVATE ${RES_CORO_SRC_FILES}
-        PRIVATE ${MUTEX_INC_FILES}
-        PRIVATE ${MUTEX_SRC_FILES}
         PUBLIC ${INC_FILES}
         )
 
 target_link_libraries(${PROJECT_NAME}
+                      ${OPENSSL_LIBS}
                       sockets
-                      ${SOCKETS_DEPENDENCY_LIBS}
+                      mutex
+                      resumable-coroutine
+                      utility
                       )
 
 target_link_libraries(test
+                      ${OPENSSL_LIBS}
                       sockets
-                      ${SOCKETS_DEPENDENCY_LIBS}
+                      mutex
+                      resumable-coroutine
+                      utility
                       ${PROJECT_NAME}
                       )
 

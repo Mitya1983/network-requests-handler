@@ -232,16 +232,3 @@ set_target_properties(
         VERSION ${LIB_VERSION}
         OUTPUT_NAME ${PROJECT_NAME}
         )
-if (BUILD_DOCS)
-    find_package(Doxygen REQUIRED doxygen)
-    set(DOXYGEN_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/Docs)
-    set(DOXYGEN_GENERATE_HTML YES)
-    set(DOXYGEN_GENERATE_LATEX NO)
-    set(DOXYGEN_SORT_MEMBER_DOCS NO)
-    doxygen_add_docs(
-            doxygen
-            ${PROJECT_SOURCE_DIR}/inc
-            ALL
-            )
-endif ()
-

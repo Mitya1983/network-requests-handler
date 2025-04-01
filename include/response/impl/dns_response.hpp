@@ -19,7 +19,8 @@ namespace mt::network {
         ~DnsResponse() = default;
 
         [[nodiscard]] auto error() const -> const std::error_code&;
-        [[nodiscard]] auto resolved_ips() -> std::vector< Ipv4 >&;
+        [[nodiscard]] auto resolvedIps() -> std::vector< Ipv4 >&;
+        [[nodiscard]] auto resolvedAliases() -> std::vector< std::string >&;
 
     private:
         std::vector< std::byte > m_raw_data;  // Consider not to store this

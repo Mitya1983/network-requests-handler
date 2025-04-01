@@ -7,7 +7,6 @@
 #include <string>
 #include <system_error>
 
-
 namespace mt::network {
     class Url {
 
@@ -33,6 +32,7 @@ namespace mt::network {
         [[nodiscard]] auto userName() const noexcept -> const std::string&;
         [[nodiscard]] auto userPassword() const noexcept -> const std::string&;
         [[nodiscard]] auto host() const noexcept -> const std::string&;
+        [[nodiscard]] auto hostAliases() const noexcept -> const std::vector< std::string >&;
         [[nodiscard]] auto hostIP() const noexcept -> Ipv4;
         [[nodiscard]] auto hostIPList() const noexcept -> const std::vector< Ipv4 >&;
         [[nodiscard]] auto port() const noexcept -> std::string;
@@ -47,6 +47,7 @@ namespace mt::network {
         [[nodiscard]] auto error() const noexcept -> std::error_code;
 
         void resolve();
+
     private:
         std::string m_scheme;
         std::string m_user_name;
@@ -56,7 +57,7 @@ namespace mt::network {
         std::string m_fragment;
 
         Params m_params;
-
+        std::vector< std::string > m_aliases;
         std::vector< Ipv4 > m_host_ip{};
 
         std::error_code m_error;
@@ -67,5 +68,5 @@ namespace mt::network {
         bool m_resolved{false};
     };
 
-}  // namespace tristan::network
+}  // namespace mt::network
 #endif  //INCLUDE_URL_HPP

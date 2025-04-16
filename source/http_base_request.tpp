@@ -123,10 +123,6 @@ template < class Derived > void ::mt::network::HttpRequest< Derived >::processRe
     }
 
     const auto response = std::get< std::shared_ptr< HttpResponse > >(m_response);
-    if (response->status() != http::Status::Ok) {
-        RequestBase::setStatus(Status::Done);
-        return;
-    }
 
     if (const auto content_length = response->headers().headerValue(mt::network::http::header_names::content_length)) {
         m_bytes_to_read = std::stoll(content_length.value());

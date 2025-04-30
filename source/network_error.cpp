@@ -27,18 +27,17 @@ namespace /*anonymous*/
     inline const NetworkCategory g_network_error_category;
 
     inline const std::map< mt::network::UrlErrors, std::string > g_url_code_descriptions{
-        {mt::network::UrlErrors::Unknown_error,      "Unknown error"                                                                                   },
-        {mt::network::UrlErrors::Not_found_error,    "Host not found"                                                                                  },
-        {mt::network::UrlErrors::Try_again_error,    "A temporary error occurred on an authoritative name server. Try again later"                     },
-        {mt::network::UrlErrors::No_recovery_error,  "A nonrecoverable name server error occurred"                                                     },
-        {mt::network::UrlErrors::No_data_error,
-         "The requested name is valid but does not have an IP address. Another type of request to the name server for this domain may return an answer"},
-        {mt::network::UrlErrors::Bad_host_size,      "Host size is to big"                                                                             },
-        {mt::network::UrlErrors::Bad_host_format,    "Host contains not allowed characters"                                                            },
-        {mt::network::UrlErrors::Bad_url_format,     "Bad url format"                                                                                  },
-        {mt::network::UrlErrors::Bad_ip_format,      "Bad IP format"                                                                                   },
-        {mt::network::UrlErrors::Unsupported_scheme, "Unsupported or bad scheme"                                                                       },
-        {mt::network::UrlErrors::Ip_converter_error, "IP address conversion failed"                                                                    },
+        {mt::network::UrlErrors::Unknown_error,      "Unknown error"                                                                                                                               },
+        {mt::network::UrlErrors::Not_found_error,    "Host not found"                                                                                                                              },
+        {mt::network::UrlErrors::Try_again_error,    "A temporary error occurred on an authoritative name server. Try again later"                                                                 },
+        {mt::network::UrlErrors::No_recovery_error,  "A nonrecoverable name server error occurred"                                                                                                 },
+        {mt::network::UrlErrors::No_data_error,      "The requested name is valid but does not have an IP address. Another type of request to the name server for this domain may return an answer"},
+        {mt::network::UrlErrors::Bad_host_size,      "Host size is to big"                                                                                                                         },
+        {mt::network::UrlErrors::Bad_host_format,    "Host contains not allowed characters"                                                                                                        },
+        {mt::network::UrlErrors::Bad_url_format,     "Bad url format"                                                                                                                              },
+        {mt::network::UrlErrors::Bad_ip_format,      "Bad IP format"                                                                                                                               },
+        {mt::network::UrlErrors::Unsupported_scheme, "Unsupported or bad scheme"                                                                                                                   },
+        {mt::network::UrlErrors::Ip_converter_error, "IP address conversion failed"                                                                                                                },
     };
 
     struct UrlErrorCategory final : std::error_category {
@@ -50,20 +49,20 @@ namespace /*anonymous*/
     inline const UrlErrorCategory g_url_error_category;
 
     inline const std::map< mt::network::DnsErrors, std::string > g_dns_code_descriptions{
-        {mt::network::DnsErrors::Success,                 "Success"                                                                                             },
-        {mt::network::DnsErrors::Format_error,            "The name server was unable to interpret the request due to a format error"                           },
-        {mt::network::DnsErrors::Server_fail,             "Server Failure"                                                                                      },
-        {mt::network::DnsErrors::Nxdomain,                "Some name that ought to exist, does not exist"                                                       },
-        {mt::network::DnsErrors::Not_implemented,         "The name server does not support the specified Opcode"                                               },
-        {mt::network::DnsErrors::Refused,                 "The name server refuses to perform the specified operation for policy or security reasons"           },
-        {mt::network::DnsErrors::Yxdomain,                "Some name that ought not to exist, does exist"                                                       },
-        {mt::network::DnsErrors::Yxrrset,                 "Some RRset that ought not to exist, does exist"                                                      },
-        {mt::network::DnsErrors::Nxrrset,                 "Some RRset that ought to exist, does not exist"                                                      },
-        {mt::network::DnsErrors::Not_auth,                "The server is not authoritative for the zone named in the Zone Section"                              },
+        {mt::network::DnsErrors::Success,                 "Success"                                                                                              },
+        {mt::network::DnsErrors::Format_error,            "The name server was unable to interpret the request due to a format error"                            },
+        {mt::network::DnsErrors::Server_fail,             "Server Failure"                                                                                       },
+        {mt::network::DnsErrors::Nxdomain,                "Some name that ought to exist, does not exist"                                                        },
+        {mt::network::DnsErrors::Not_implemented,         "The name server does not support the specified Opcode"                                                },
+        {mt::network::DnsErrors::Refused,                 "The name server refuses to perform the specified operation for policy or security reasons"            },
+        {mt::network::DnsErrors::Yxdomain,                "Some name that ought not to exist, does exist"                                                        },
+        {mt::network::DnsErrors::Yxrrset,                 "Some RRset that ought not to exist, does exist"                                                       },
+        {mt::network::DnsErrors::Nxrrset,                 "Some RRset that ought to exist, does not exist"                                                       },
+        {mt::network::DnsErrors::Not_auth,                "The server is not authoritative for the zone named in the Zone Section"                               },
         {mt::network::DnsErrors::Not_zone,                "A name used in the Prerequisite or Update Section is not within the zone denoted by the Zone Sectiona"},
-        {mt::network::DnsErrors::Incorrect_response_size, "Incorrect response size"                                                                             },
-        {mt::network::DnsErrors::Response_id_missmatch,   "Response id does not match with query id"                                                            },
-        {mt::network::DnsErrors::Unknown_error,           "Unknown error"                                                                                       },
+        {mt::network::DnsErrors::Incorrect_response_size, "Incorrect response size"                                                                              },
+        {mt::network::DnsErrors::Response_id_missmatch,   "Response id does not match with query id"                                                             },
+        {mt::network::DnsErrors::Unknown_error,           "Unknown error"                                                                                        },
     };
 
     struct DnsErrorCategory final : std::error_category {
@@ -133,3 +132,18 @@ auto mt::network::makeError(DnsErrors p_error) -> std::error_code { return {stat
 auto mt::network::dnsErrorCategory() -> const std::error_category& { return g_dns_error_category; }
 
 // auto mt::network::makeError(const ResponseError p_error) -> std::error_code { return g_response_code_descriptions.at(error); }
+auto operator==(std::variant< mt::network::ErrorCode, mt::network::UrlErrors, mt::network::DnsErrors, mt::network::HttpErrors > p_left, int32_t p_right) -> bool {
+    return std::visit(
+        [p_right](auto l_left) -> bool {
+            return static_cast< int32_t >(l_left) == p_right;
+        },
+        p_left);
+}
+
+auto operator==(int32_t p_left, std::variant< mt::network::ErrorCode, mt::network::UrlErrors, mt::network::DnsErrors, mt::network::HttpErrors > p_right) -> bool {
+    return std::visit(
+        [p_left](auto l_right) -> bool {
+            return p_left == static_cast< int32_t >(l_right);
+        },
+        p_right);
+}

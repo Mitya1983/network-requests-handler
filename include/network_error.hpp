@@ -3,6 +3,7 @@
 
 #include <system_error>
 #include <cstdint>
+#include <variant>
 
 namespace mt::network {
 
@@ -87,5 +88,8 @@ namespace mt::network {
     // [[nodiscard]] auto makeError(ResponseError error) -> std::error_code;
 
 }  // namespace mt::network
+
+auto operator==(std::variant< mt::network::ErrorCode, mt::network::UrlErrors, mt::network::DnsErrors, mt::network::HttpErrors > p_left, int32_t p_right) -> bool;
+auto operator==(int32_t p_left, std::variant< mt::network::ErrorCode, mt::network::UrlErrors, mt::network::DnsErrors, mt::network::HttpErrors > p_right) -> bool;
 
 #endif  // NETWORK_REQUEST_HANDLER_INCLUDE_NETWORK_ERROR_HPP

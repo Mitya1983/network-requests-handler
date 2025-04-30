@@ -204,6 +204,8 @@ auto mt::network::Url::userPassword() const noexcept -> const std::string& { ret
 
 auto mt::network::Url::host() const noexcept -> const std::string& { return m_host; }
 
+auto mt::network::Url::hostAliases() const noexcept -> const std::vector< std::string >& { return m_aliases; }
+
 auto mt::network::Url::hostIP() const noexcept -> Ipv4 { return m_host_ip.empty() ? Ipv4{} : m_host_ip[0]; }
 
 auto mt::network::Url::hostIPList() const noexcept -> const std::vector< Ipv4 >& { return m_host_ip; }
@@ -321,10 +323,11 @@ void mt::network::Url::resolve() {
         m_error = error;
         return;
     }
-    m_host_ip = std::move(response->resolved_ips());
+    m_host_ip = std::move(response->resolvedIps());
     if (m_host_ip.empty()) {
         m_error = makeError(mt::network::ErrorCode::Host_not_found);
         return;
     }
+    m_aliases = std::move(response->resolvedAliases());
     m_resolved = true;
 }

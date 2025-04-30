@@ -82,7 +82,7 @@ mt::network::DnsResponse::DnsResponse(std::vector< std::byte > data, const uint1
     while (iter != m_raw_data.end()) {
         if (*iter == uint8_t{192}) {
             ++iter;
-            if (auto name = nameFromPointer(m_raw_data.begin() + static_cast< int8_t >(*iter), m_raw_data); m_aliases.empty() or name != m_aliases.back()) {
+            if (auto name = nameFromPointer(m_raw_data.begin() + static_cast< int8_t >(*iter), m_raw_data); (m_aliases.empty() or name != m_aliases.back()) and not name.empty()) {
                 m_aliases.push_back(std::move(name));
             }
             ++iter;
@@ -102,7 +102,8 @@ mt::network::DnsResponse::DnsResponse(std::vector< std::byte > data, const uint1
                 break;
             }
             case 2: {
-                break;
+                m_error = makeError(DnsErrors::Response_type_not_supported);
+                return;
             }
             case 5: {
                 auto end = iter + data_length;
@@ -139,7 +140,8 @@ mt::network::DnsResponse::DnsResponse(std::vector< std::byte > data, const uint1
             case 35:
             case 257:
             default: {
-                break;
+                m_error = makeError(DnsErrors::Response_type_not_supported);
+                return;
             }
         }
     }
@@ -147,7 +149,9 @@ mt::network::DnsResponse::DnsResponse(std::vector< std::byte > data, const uint1
 
 auto mt::network::DnsResponse::error() const -> const std::error_code& { return m_error; }
 
-auto mt::network::DnsResponse::resolved_ips() -> std::vector< Ipv4 >& { return m_ipv4s; }
+auto mt::network::DnsResponse::resolvedIps() -> std::vector< Ipv4 >& { return m_ipv4s; }
+
+auto mt::network::DnsResponse::resolvedAliases() -> std::vector< std::string >& { return m_aliases; }
 
 namespace {
     std::string nameFromPointer(std::vector< std::byte >::iterator iter, std::vector< std::byte >& data) {  //NOLINT

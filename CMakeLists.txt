@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.25)
 
-project(network-request-handler LANGUAGES CXX)
+project(network-requests-handler LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -124,9 +124,13 @@ endif ()
 
 include_directories(
         ${CMAKE_CURRENT_SOURCE_DIR}
-        ${OPENSSL_INCLUDE_DIR}
-        ${CMAKE_CURRENT_SOURCE_DIR}/deps
         )
+if (${PROJECT_IS_TOP_LEVEL})
+    include_directories(
+            ${OPENSSL_INCLUDE_DIR}
+            ${CMAKE_CURRENT_SOURCE_DIR}/deps
+            )
+endif ()
 
 file(GLOB INC_FILES CONFIGURE_DEPENDS
      include/*.hpp

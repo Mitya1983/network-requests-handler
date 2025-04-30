@@ -1,5 +1,7 @@
 #include "include/network_utility.hpp"
 
+#include "utility/include/utility.hpp"
+
 #include <arpa/inet.h>
 
 #include <cmath>
@@ -101,42 +103,46 @@ auto mt::network::utility::decodeUrl(const std::string& p_string_to_encode) -> s
     return result;
 }
 
-auto mt::network::utility::toNetworkByteOrder(uint16_t p_value) -> uint16_t {
+auto mt::network::utility::toNetworkByteOrder(const uint16_t p_value) -> uint16_t {
     if constexpr (std::endian::native == std::endian::big) {
         return p_value;
     }
-    const auto ptr = reinterpret_cast< std::byte* >(&p_value);
-    std::swap(ptr[0], ptr[1]);
-    return *reinterpret_cast< uint16_t* >(ptr);
+    // const auto ptr = reinterpret_cast< std::byte* >(&p_value);
+    // std::swap(ptr[0], ptr[1]);
+    // return *reinterpret_cast< uint16_t* >(ptr);
+    return mt::utility::swapBytes(p_value);
 }
 
-auto mt::network::utility::toNetworkByteOrder(uint32_t p_value) -> uint16_t {
+auto mt::network::utility::toNetworkByteOrder(const uint32_t p_value) -> uint16_t {
     if constexpr (std::endian::native == std::endian::big) {
         return p_value;
     }
-    const auto ptr = reinterpret_cast< std::byte* >(&p_value);
-    std::swap(ptr[0], ptr[3]);
-    std::swap(ptr[1], ptr[2]);
-    return *reinterpret_cast< uint32_t* >(ptr);
+    // const auto ptr = reinterpret_cast< std::byte* >(&p_value);
+    // std::swap(ptr[0], ptr[3]);
+    // std::swap(ptr[1], ptr[2]);
+    // return *reinterpret_cast< uint32_t* >(ptr);
+    return mt::utility::swapBytes(p_value);
 }
 
-auto mt::network::utility::toHostByteOrder(uint16_t p_value) -> uint16_t {
+auto mt::network::utility::toHostByteOrder(const uint16_t p_value) -> uint16_t {
     if constexpr (std::endian::native == std::endian::big) {
         return p_value;
     }
-    const auto ptr = reinterpret_cast< std::byte* >(&p_value);
-    std::swap(ptr[0], ptr[1]);
-    return *reinterpret_cast< uint16_t* >(ptr);
+    // const auto ptr = reinterpret_cast< std::byte* >(&p_value);
+    // std::swap(ptr[0], ptr[1]);
+    // return *reinterpret_cast< uint16_t* >(ptr);
+    return mt::utility::swapBytes(p_value);
 }
 
-auto mt::network::utility::toHostByteOrder(uint32_t p_value) -> uint32_t {
+auto mt::network::utility::toHostByteOrder(const uint32_t p_value) -> uint32_t {
     if constexpr (std::endian::native == std::endian::big) {
         return p_value;
     }
-    const auto ptr = reinterpret_cast< std::byte* >(&p_value);
-    std::swap(ptr[0], ptr[3]);
-    std::swap(ptr[1], ptr[2]);
-    return *reinterpret_cast< uint32_t* >(ptr);
+    // const auto ptr = reinterpret_cast< std::byte* >(&p_value);
+    // std::swap(ptr[0], ptr[3]);
+    // std::swap(ptr[1], ptr[2]);
+    // return *reinterpret_cast< uint32_t* >(ptr);
+    return mt::utility::swapBytes(p_value);
 }
 
 auto mt::network::utility::getLocalDnsIp() -> std::string {

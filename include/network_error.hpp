@@ -49,6 +49,7 @@ namespace mt::network {
         Not_zone,
         Incorrect_response_size,
         Response_id_missmatch,
+        Response_type_not_supported,
         Unknown_error,
     };
 
